@@ -40,7 +40,7 @@ pub fn main() !void {
     defer argsIter.deinit();
     _ = argsIter.next();
 
-    std.debug.print("Args:", .{});
+    std.log.debug("Args:", .{});
 
     var i: usize = 0;
     while (argsIter.next()) |argStr| {
@@ -52,9 +52,9 @@ pub fn main() !void {
         // TODO: Where is this supposed to happen?
         // defer targ.deinit();
 
-        std.debug.print("{s} ", .{targ.term});
+        std.log.debug("{s} ", .{targ.term});
         if (targ.value) |number| {
-            std.debug.print("{d} ", .{number});
+            std.log.debug("{d} ", .{number});
         }
 
         i += 1;
@@ -62,10 +62,8 @@ pub fn main() !void {
         try al.append(gpallocator, targ);
     }
 
-    std.debug.print("\n", .{});
-
     // for (al.items(.term), al.items(.value)) |*term, *value| {
-    //     std.debug.print("{s} {?d}\n", .{ term.*, value.* });
+    //     std.log.debug("{s} {?d}\n", .{ term.*, value.* });
     // }
 
     // Examples:
@@ -164,7 +162,7 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
     const tV = t.*.toValue orelse 0.0;
     const tU = t.*.toUnit orelse "";
 
-    std.debug.print("{d} {s} -> {d} {s}\n", .{ fV, fU, tV, tU });
+    std.log.debug("{d} {s} -> {d} {s}", .{ fV, fU, tV, tU });
 
     const rfUnit = getUnit(fU);
     const rtUnit = getUnit(tU);
@@ -176,13 +174,12 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
     var tmp = fV;
     const path = try graph.resolveConversion(rfUnit.?, rtUnit.?);
     for (path) |conv| {
-        stdout.print("Conversion: {s} -> {s} using formula: {s}\n", .{ conv.from.name, conv.to.name, conv.formula }) catch |err| {
-            std.debug.print("error: {}\n", .{err});
-            return;
-        };
+        std.log.debug("Conversion: {s} -> {s} using formula: {s}", .{ conv.from.name, conv.to.name, conv.formula });
         tmp = conv.apply(tmp);
-        try stdout.print("{d}\n", .{tmp});
+        std.log.debug("{d}", .{tmp});
     }
+
+    try stdout.print("{d}\n", .{tmp});
 }
 
 fn getUnit(input: []const u8) ?conversion.Unit {
