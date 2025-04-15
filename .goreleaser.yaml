@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+builds:
+  - builder: zig
+    flags:
+      - -Doptimize=ReleaseSafe
+    targets:
+      - aarch64-linux
+      - aarch64-macos
+      - aarch64-windows
+      - arm-linux
+      - x86_64-linux-gnu
+      - x86_64-linux-musl
+      - x86_64-macos
+      - x86_64-windows
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  footer: ""
+

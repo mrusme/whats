@@ -14,3 +14,6 @@ zig-out/
 # Dependency packages (if using package manager that clones to folder)
 .zigmod/
 
+# Added by goreleaser init:
+dist/
+.intentionally-empty-file.o
