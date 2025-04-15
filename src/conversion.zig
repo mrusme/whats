@@ -2,6 +2,8 @@ const std = @import("std");
 const bfstree = @import("bfstree");
 
 pub const Category = enum {
+    data,
+    energy,
     length,
     mass,
     power,
