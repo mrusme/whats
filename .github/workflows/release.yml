@@ -21,7 +21,12 @@ jobs:
     - name: Set version
       run: |
         TAG="${{ github.event.release.tag_name }}"
+        echo "VERSION=${TAG#v}"
         echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
+    - name: Get version
+      run: |
+        echo "$VERSION"
 
     - uses: goreleaser/goreleaser-action@v6
       with:
