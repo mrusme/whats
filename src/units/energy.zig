@@ -20,7 +20,6 @@ pub const Units = .{
     conversion.Unit{ .name = "kilojoule", .plural = "+s", .symbol = "kJ", .ratio = 1000.0, .category = conversion.Category.energy },
     conversion.Unit{ .name = "megajoule", .plural = "+s", .symbol = "MJ", .ratio = 1000000.0, .category = conversion.Category.energy },
     conversion.Unit{ .name = "gigajoule", .plural = "+s", .symbol = "GJ", .ratio = 1000000000.0, .category = conversion.Category.energy },
-    conversion.Unit{ .name = "gigajoule", .plural = "+s", .symbol = "GJ", .ratio = 1000000000.0, .category = conversion.Category.energy },
     conversion.Unit{ .name = "terajoule", .plural = "+s", .symbol = "TJ", .ratio = 1000000000000.0, .category = conversion.Category.energy },
     conversion.Unit{ .name = "petajoule", .plural = "+s", .symbol = "PJ", .ratio = 1000000000000000.0, .category = conversion.Category.energy },
     conversion.Unit{ .name = "exajoule", .plural = "+s", .symbol = "EJ", .ratio = 1000000000000000000.0, .category = conversion.Category.energy },
