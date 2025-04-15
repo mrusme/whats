@@ -2,6 +2,7 @@ const std = @import("std");
 const arg = @import("arg.zig");
 const conversion = @import("conversion.zig");
 const data = @import("units/data.zig");
+const energy = @import("units/energy.zig");
 const lengths = @import("units/lengths.zig");
 const task = @import("task.zig");
 const Allocator = std.mem.Allocator;
@@ -19,6 +20,7 @@ pub fn main() !void {
     defer graph.deinit();
 
     try data.load(&graph);
+    try energy.load(&graph);
     try lengths.load(&graph);
 
     var al = std.MultiArrayList(arg.Arg){};
@@ -174,7 +176,7 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
 }
 
 fn getUnit(input: []const u8) ?conversion.Unit {
-    const units = data.Units ++ lengths.Units;
+    const units = data.Units ++ energy.Units ++ lengths.Units;
     inline for (units) |unit| {
         if (std.mem.eql(u8, input, unit.symbol)) {
             return unit;
