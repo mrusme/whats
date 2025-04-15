@@ -4,7 +4,6 @@ const conversion = @import("conversion.zig");
 const lengths = @import("units/lengths.zig");
 const task = @import("task.zig");
 const Allocator = std.mem.Allocator;
-const stdout = std.io.getStdOut().writer();
 
 pub fn main() !void {
     var allocator = std.heap.page_allocator;
@@ -145,6 +144,7 @@ fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) ta
 }
 
 fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
+    const stdout = std.io.getStdOut().writer();
     const fV = t.*.fromValue orelse 0.0;
     const fU = t.*.fromUnit orelse "";
     const tV = t.*.toValue orelse 0.0;
