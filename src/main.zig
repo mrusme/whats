@@ -17,6 +17,16 @@ const Allocator = std.mem.Allocator;
 
 const VERSION = build_options.version;
 
+const Units =
+    data.Units ++
+    energy.Units ++
+    lengths.Units ++
+    mass.Units ++
+    power.Units ++
+    pressure.Units ++
+    time.Units ++
+    volume.Units;
+
 pub fn main() !void {
     var allocator = std.heap.page_allocator;
 
@@ -100,10 +110,31 @@ fn showHelp() !void {
     try stdout.print("  -h, --help       display this help and exit\n", .{});
     try stdout.print("  -v, --version    output version information and exit\n", .{});
     try stdout.print("\n", .{});
+
+    try stdout.print("Units:\n", .{});
+    try stdout.print("  {s: <8}{s: <24}{s}\n", .{ "Symbol", "Name", "Category" });
+    try stdout.print("--------------------------------------------------------------------------------\n", .{});
+    inline for (Units) |unit| {
+        try stdout.print("  {s: <8}{s: <24}{s}\n", .{ unit.symbol, unit.name, @tagName(unit.category) });
+    }
+    try stdout.print("--------------------------------------------------------------------------------\n", .{});
+    try stdout.print("Note:\n", .{});
+    try stdout.print("  Symbols are case-sensitive, names are not.\n", .{});
+    try stdout.print("\n", .{});
+
     try stdout.print("Examples:\n", .{});
     try stdout.print("  whats 2 meters in feet\n", .{});
     try stdout.print("  whats 1.21 gigawatts in watts\n", .{});
+    try stdout.print("  whats 8 kg in grams\n", .{});
+    try stdout.print("  whats 1024 KiB in MiB\n", .{});
     try stdout.print("\n", .{});
+    try stdout.print("The [in|of] keywords are optional:\n", .{});
+    try stdout.print("  whats 2 m ft\n", .{});
+    try stdout.print("\n", .{});
+    try stdout.print("Spaces are optional:\n", .{});
+    try stdout.print("  whats 2m ft\n", .{});
+    try stdout.print("\n", .{});
+
     try stdout.print("Report bugs at: https://github.com/mrusme/whats/issues\n", .{});
     try stdout.print("Home page: http://xn--gckvb8fzb.com/projects/whats/\n", .{});
 }
@@ -218,14 +249,15 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
 }
 
 fn getUnit(input: []const u8) ?conversion.Unit {
-    const units = data.Units ++ energy.Units ++ lengths.Units ++ mass.Units ++ power.Units ++ pressure.Units ++ time.Units ++ volume.Units;
-    inline for (units) |unit| {
+    inline for (Units) |unit| {
         if (std.mem.eql(u8, input, unit.symbol)) {
             return unit;
         } else if (std.ascii.eqlIgnoreCase(input, unit.name)) {
             return unit;
         } else {
-            if (unit.plural[0] == '+' and slicesMatch(input, unit.name, unit.plural[1..])) {
+            if (unit.plural[0] == '+' and
+                slicesMatch(input, unit.name, unit.plural[1..]))
+            {
                 return unit;
             } else if (std.mem.eql(u8, input, unit.plural)) {
                 return unit;
