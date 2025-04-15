@@ -2,11 +2,14 @@
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 version: 2
+# env:
+#   - VERSION={{ .Env.VERSION }}
 
 builds:
   - builder: zig
     flags:
       - -Doptimize=ReleaseSafe
+      - -Dversion-string={{ .Env.VERSION }}
     targets:
       - aarch64-linux
       - aarch64-macos

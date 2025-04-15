@@ -1,9 +1,10 @@
 const std = @import("std");
+const mem = std.mem;
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -15,11 +16,6 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    const bfstree = b.dependency("bfstree_zig", .{
-        .target = target,
-        .optimize = optimize,
-    }).module("bfstree");
-
     const exe = b.addExecutable(.{
         .name = "whats",
         .root_source_file = b.path("src/main.zig"),
@@ -27,6 +23,17 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const exe_options = b.addOptions();
+
+    const opt_version_string = b.option([]const u8, "version-string", "Override version string");
+    const v = if (opt_version_string) |version| version else "0.0.0";
+    exe_options.addOption([]const u8, "version", v);
+    exe.root_module.addOptions("build_options", exe_options);
+
+    const bfstree = b.dependency("bfstree_zig", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("bfstree");
     exe.root_module.addImport("bfstree", bfstree);
 
     // This declares intent for the executable to be installed into the

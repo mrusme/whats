@@ -1,4 +1,6 @@
 const std = @import("std");
+const build_options = @import("build_options");
+
 const arg = @import("arg.zig");
 const conversion = @import("conversion.zig");
 const data = @import("units/data.zig");
@@ -10,7 +12,10 @@ const pressure = @import("units/pressure.zig");
 const time = @import("units/time.zig");
 const volume = @import("units/volume.zig");
 const task = @import("task.zig");
+
 const Allocator = std.mem.Allocator;
+
+const VERSION = build_options.version;
 
 pub fn main() !void {
     var allocator = std.heap.page_allocator;
@@ -53,6 +58,14 @@ pub fn main() !void {
         // defer targ.deinit();
 
         std.log.debug("{s} ", .{targ.term});
+        if (std.mem.eql(u8, targ.term, "-h") or std.mem.eql(u8, targ.term, "--help")) {
+            try showHelp();
+            std.process.exit(0);
+        } else if (std.mem.eql(u8, targ.term, "-v") or std.mem.eql(u8, targ.term, "--version")) {
+            try showVersion();
+            std.process.exit(0);
+        }
+
         if (targ.value) |number| {
             std.log.debug("{d} ", .{number});
         }
@@ -77,6 +90,28 @@ pub fn main() !void {
 
     var t = taskFromArgs(&allocator, &al);
     try compute(&t, &graph);
+}
+
+fn showHelp() !void {
+    const stdout = std.io.getStdOut().writer();
+
+    try stdout.print("Usage: whats [OPTION]... NUMBER UNIT [in|of] NUMBER UNIT\n", .{});
+    try stdout.print("A command for basic convertion and calculation.\n\n", .{});
+    try stdout.print("  -h, --help       display this help and exit\n", .{});
+    try stdout.print("  -v, --version    output version information and exit\n", .{});
+    try stdout.print("\n", .{});
+    try stdout.print("Examples:\n", .{});
+    try stdout.print("  whats 2 meters in feet\n", .{});
+    try stdout.print("  whats 1.21 gigawatts in watts\n", .{});
+    try stdout.print("\n", .{});
+    try stdout.print("Report bugs at: https://github.com/mrusme/whats/issues\n", .{});
+    try stdout.print("Home page: http://xn--gckvb8fzb.com/projects/whats/\n", .{});
+}
+
+fn showVersion() !void {
+    const stdout = std.io.getStdOut().writer();
+
+    try stdout.print("whats version {s}\n", .{VERSION});
 }
 
 fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) task.Task {

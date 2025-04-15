@@ -18,6 +18,11 @@ jobs:
       with:
         version: 0.14.0
 
+    - name: Set version
+      run: |
+        TAG="${{ github.event.release.tag_name }}"
+        echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+
     - uses: goreleaser/goreleaser-action@v6
       with:
         distribution: goreleaser
