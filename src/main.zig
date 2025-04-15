@@ -8,6 +8,7 @@ const mass = @import("units/mass.zig");
 const power = @import("units/power.zig");
 const pressure = @import("units/pressure.zig");
 const time = @import("units/time.zig");
+const volume = @import("units/volume.zig");
 const task = @import("task.zig");
 const Allocator = std.mem.Allocator;
 
@@ -30,6 +31,7 @@ pub fn main() !void {
     try power.load(&graph);
     try pressure.load(&graph);
     try time.load(&graph);
+    try volume.load(&graph);
 
     var al = std.MultiArrayList(arg.Arg){};
     defer al.deinit(gpallocator);
@@ -184,7 +186,7 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
 }
 
 fn getUnit(input: []const u8) ?conversion.Unit {
-    const units = data.Units ++ energy.Units ++ lengths.Units ++ mass.Units ++ power.Units ++ pressure.Units ++ time.Units;
+    const units = data.Units ++ energy.Units ++ lengths.Units ++ mass.Units ++ power.Units ++ pressure.Units ++ time.Units ++ volume.Units;
     inline for (units) |unit| {
         if (std.mem.eql(u8, input, unit.symbol)) {
             return unit;

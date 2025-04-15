@@ -10,6 +10,7 @@ pub const Category = enum {
     pressure,
     temperature,
     time,
+    volume,
 };
 
 pub const Unit = struct {
