@@ -18,6 +18,12 @@ jobs:
       with:
         version: 0.14.0
 
-    - run: zig build test
+    - uses: goreleaser/goreleaser-action@v6
+      with:
+        distribution: goreleaser
+        version: "~> v2"
+        args: release --clean --timeout 80m
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
