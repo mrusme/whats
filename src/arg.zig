@@ -107,8 +107,16 @@ pub const ArgList = struct {
         return;
     }
 
+    pub fn get(self: *ArgList, idx: usize) Arg {
+        return self.argList.get(idx);
+    }
+
     pub fn has(self: *ArgList, num: usize) bool {
         return self.argList.len == num;
+    }
+
+    pub fn hasLessThan(self: *ArgList, num: usize) bool {
+        return self.argList.len < num;
     }
 
     pub fn termIs(self: *ArgList, idx: usize, ref: []const u8) bool {

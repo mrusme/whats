@@ -71,87 +71,8 @@ pub fn main() !void {
     defer argList.deinit();
     try argList.parse();
 
-    if (argList.termIs(0, "-h") or argList.termIs(0, "--help")) {
-        try commands.help(&units);
-        std.process.exit(0);
-    } else if (argList.termIs(0, "-v") or argList.termIs(0, "--version")) {
-        try commands.version();
-        std.process.exit(0);
-    }
-
-    var t = taskFromArgs(&argList.argList);
+    var t = task.Task.fromArgList(&argList);
     try compute(&t, &graph, &units);
-}
-
-fn taskFromArgs(argList: *const std.MultiArrayList(arg.Arg)) task.Task {
-    if (argList.len < 2) {} else if (argList.len == 2) {
-        // Example: 3m ft
-        const arg1 = argList.get(0);
-        const arg2 = argList.get(1);
-        return task.Task{
-            .type = task.Type.Conversion,
-            .fromValue = arg1.value,
-            .fromUnit = arg1.term,
-            .toValue = arg2.value,
-            .toUnit = arg2.term,
-        };
-    } else if (argList.len == 3) {
-        const arg1 = argList.get(0);
-        const arg2 = argList.get(1);
-        const arg3 = argList.get(2);
-
-        if (std.mem.eql(u8, arg2.term, "in") or
-            std.mem.eql(u8, arg2.term, "of"))
-        {
-            // Example: 22m in ft
-            return task.Task{
-                .type = task.Type.Conversion,
-                .fromValue = arg1.value,
-                .fromUnit = arg1.term,
-                .toValue = arg3.value,
-                .toUnit = arg3.term,
-            };
-        } else {
-            if (arg1.value != null and std.mem.eql(u8, arg1.term, "") and
-                arg2.value == null and !std.mem.eql(u8, arg2.term, ""))
-            {
-                // Example: 22 m ft
-                return task.Task{
-                    .type = task.Type.Conversion,
-                    .fromValue = arg1.value,
-                    .fromUnit = arg2.term,
-                    .toValue = arg3.value,
-                    .toUnit = arg3.term,
-                };
-            }
-        }
-    } else if (argList.len == 4) {
-        const arg1 = argList.get(0);
-        const arg2 = argList.get(1);
-        const arg3 = argList.get(2);
-        const arg4 = argList.get(3);
-
-        if (std.mem.eql(u8, arg3.term, "in") or
-            std.mem.eql(u8, arg3.term, "of"))
-        {
-            // Example: 22 m in ft
-            return task.Task{
-                .type = task.Type.Conversion,
-                .fromValue = arg1.value,
-                .fromUnit = arg2.term,
-                .toValue = arg4.value,
-                .toUnit = arg4.term,
-            };
-        }
-    }
-
-    return task.Task{
-        .type = task.Type.Undefined,
-        .fromValue = null,
-        .fromUnit = null,
-        .toValue = null,
-        .toUnit = null,
-    };
 }
 
 fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiArrayList(conversion.Unit)) !void {
@@ -160,6 +81,16 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
     const fU = t.*.fromUnit orelse "";
     const tV = t.*.toValue orelse 0.0;
     const tU = t.*.toUnit orelse "";
+
+    if (t.*.type == task.Type.Command) {
+        if (std.mem.eql(u8, fU, "-h") or std.mem.eql(u8, fU, "--help")) {
+            try commands.help(units);
+            std.process.exit(0);
+        } else if (std.mem.eql(u8, fU, "-v") or std.mem.eql(u8, fU, "--version")) {
+            try commands.version();
+            std.process.exit(0);
+        }
+    }
 
     std.log.debug("{d} {s} -> {d} {s}", .{ fV, fU, tV, tU });
 
