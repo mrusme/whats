@@ -20,7 +20,7 @@ jobs:
 
     - name: Set version
       run: |
-        TAG="${{ github.event.release.tag_name }}"
+        export TAG="${{ env.GITHUB_REF#refs/tags/ }}"
         echo "VERSION=${TAG#v}"
         echo "VERSION=${TAG#v}" >> $GITHUB_ENV
 
