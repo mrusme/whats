@@ -3,6 +3,7 @@ const arg = @import("arg.zig");
 
 pub const Type = enum {
     Undefined,
+    Empty,
     Command,
     Conversion,
     Calculation,
@@ -17,7 +18,13 @@ pub const Task = struct {
 
     pub fn fromArgList(argList: *arg.ArgList) Task {
         if (argList.has(0)) {
-            // TODO: Handle error
+            return Task{
+                .type = Type.Empty,
+                .fromValue = 0.0,
+                .fromUnit = "",
+                .toValue = 0.0,
+                .toUnit = "",
+            };
         } else if (argList.has(1)) {
             // Example: -h
             const arg1 = argList.get(0);

@@ -16,7 +16,6 @@ const volume = @import("units/volume.zig");
 const task = @import("task.zig");
 
 pub fn main() !void {
-    // const allocator = std.heap.page_allocator;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer {
         const deinit_status = gpa.deinit();
@@ -72,49 +71,83 @@ pub fn main() !void {
     try argList.parse();
 
     var t = task.Task.fromArgList(&argList);
-    try compute(&t, &graph, &units);
+    const retval = try compute(&t, &graph, &units);
+    // https://github.com/ziglang/zig/issues/20369
+    //     catch |err| switch (err) {
+    //     error.InvalidTaskCommand => {
+    //         try stdout.print("Invalid command\n", .{});
+    //         std.process.exit(1);
+    //     },
+    //     error.InvalidUnit => {
+    //         try stdout.print("Invalid unit\n", .{});
+    //         std.process.exit(1);
+    //     },
+    //     error.InvalidTaskType => {
+    //         try stdout.print("Internal error: invalid task type\n", .{});
+    //         std.process.exit(2);
+    //     },
+    //     else => {
+    //         try stdout.print("Internal error\n", .{});
+    //         std.process.exit(2);
+    //     },
+    // };
+    std.process.exit(retval);
 }
 
-fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiArrayList(conversion.Unit)) !void {
+fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiArrayList(conversion.Unit)) !u8 {
     const stdout = std.io.getStdOut().writer();
     const fV = t.*.fromValue orelse 0.0;
     const fU = t.*.fromUnit orelse "";
     const tV = t.*.toValue orelse 0.0;
     const tU = t.*.toUnit orelse "";
 
-    if (t.*.type == task.Type.Command) {
-        if (std.mem.eql(u8, fU, "-h") or std.mem.eql(u8, fU, "--help")) {
-            try commands.help(units);
-            std.process.exit(0);
-        } else if (std.mem.eql(u8, fU, "-v") or std.mem.eql(u8, fU, "--version")) {
-            try commands.version();
-            std.process.exit(0);
-        }
+    switch (t.*.type) {
+        task.Type.Command => {
+            if (std.mem.eql(u8, fU, "-h") or std.mem.eql(u8, fU, "--help")) {
+                try commands.help(units);
+                return 0;
+            } else if (std.mem.eql(u8, fU, "-v") or std.mem.eql(u8, fU, "--version")) {
+                try commands.version();
+                return 0;
+            } else {
+                return error.InvalidTaskCommand;
+            }
+        },
+        task.Type.Conversion => {
+            std.log.debug("{d} {s} -> {d} {s}", .{ fV, fU, tV, tU });
+
+            if (fU.len == 0 or tU.len == 0) {
+                return error.InvalidUnit;
+            }
+
+            const rfUnit = try getUnit(units, fU);
+            const rtUnit = try getUnit(units, tU);
+
+            var tmp = fV;
+            const path = try graph.resolveConversion(&rfUnit, &rtUnit);
+            defer graph.allocator.free(path);
+            for (path) |conv| {
+                tmp = conv.apply(tmp);
+                std.log.debug("{d}", .{tmp});
+            }
+
+            try stdout.print("{d}\n", .{tmp});
+            return 0;
+        },
+        task.Type.Calculation => {
+            // TODO: Percentages etc
+            return error.NotImplemented;
+        },
+        task.Type.Empty => {
+            return error.NoTask;
+        },
+        else => {
+            return error.InvalidTaskType;
+        },
     }
 
-    std.log.debug("{d} {s} -> {d} {s}", .{ fV, fU, tV, tU });
-
-    if (fU.len == 0 or tU.len == 0) {
-        return error.InvalidUnit;
-    }
-
-    const rfUnit = try getUnit(units, fU);
-    const rtUnit = try getUnit(units, tU);
-
-    var tmp = fV;
-    const path = try graph.resolveConversion(&rfUnit, &rtUnit);
-    defer graph.allocator.free(path);
-    for (path) |conv| {
-        tmp = conv.apply(tmp);
-        std.log.debug("{d}", .{tmp});
-    }
-
-    try stdout.print("{d}\n", .{tmp});
+    return 1;
 }
-
-const UnitError = error{
-    Oops,
-};
 
 fn getUnit(units: *std.MultiArrayList(conversion.Unit), input: []const u8) !conversion.Unit {
     if (input.len == 0) {
