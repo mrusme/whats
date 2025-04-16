@@ -90,7 +90,7 @@ pub fn main() !void {
 
         std.log.debug("{s} ", .{targ.term});
         if (std.mem.eql(u8, targ.term, "-h") or std.mem.eql(u8, targ.term, "--help")) {
-            try showHelp();
+            try showHelp(&units);
             std.process.exit(0);
         } else if (std.mem.eql(u8, targ.term, "-v") or std.mem.eql(u8, targ.term, "--version")) {
             try showVersion();
@@ -110,7 +110,7 @@ pub fn main() !void {
     try compute(&t, &graph, &units);
 }
 
-fn showHelp() !void {
+fn showHelp(units: *std.MultiArrayList(conversion.Unit)) !void {
     const stdout = std.io.getStdOut().writer();
 
     try stdout.print("Usage: whats [OPTION]... NUMBER UNIT [in|of] NUMBER UNIT\n", .{});
@@ -120,10 +120,23 @@ fn showHelp() !void {
     try stdout.print("\n", .{});
 
     try stdout.print("Units:\n", .{});
-    try stdout.print("  {s: <8}{s: <24}{s}\n", .{ "Symbol", "Name", "Category" });
+    try stdout.print("  {s: <8}{s: <24}\n", .{ "Symbol", "Name" });
     try stdout.print("--------------------------------------------------------------------------------\n", .{});
-    for (Units) |unit| {
-        try stdout.print("  {s: <8}{s: <24}{s}\n", .{ unit.symbol, unit.name, @tagName(unit.category) });
+    var temp_category: conversion.Category = conversion.Category.none;
+    var category_title: [32]u8 = [_]u8{0} ** 32;
+    for (units.items(.name), units.items(.symbol), units.items(.category)) |name, symbol, category| {
+        if (temp_category != category) {
+            if (temp_category != conversion.Category.none) {
+                try stdout.print("\n", .{});
+            }
+            temp_category = category;
+            for (&category_title) |*item| {
+                item.* = 0;
+            }
+            _ = std.ascii.upperString(&category_title, @tagName(category));
+            try stdout.print("{s}:\n", .{category_title});
+        }
+        try stdout.print("  {s: <8}{s: <24}\n", .{ symbol, name });
     }
     try stdout.print("--------------------------------------------------------------------------------\n", .{});
     try stdout.print("Note:\n", .{});
