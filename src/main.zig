@@ -69,16 +69,19 @@ pub fn main() !void {
         try units.append(gpallocator, unit);
     }
 
-    const argsList = try parseArgsList(gpallocator, &units);
-    defer {
-        for (0.., argsList.items(.term)) |i, _| {
-            const tmp = argsList.get(i);
-            @constCast(&tmp).deinit();
-        }
-        @constCast(&argsList).deinit(gpallocator);
+    var argList = arg.ArgList.init(gpallocator);
+    defer argList.deinit();
+    try argList.parse();
+
+    if (argList.termIs(0, "-h") or argList.termIs(0, "--help")) {
+        try showHelp(&units);
+        std.process.exit(0);
+    } else if (argList.termIs(0, "-v") or argList.termIs(0, "--version")) {
+        try showVersion();
+        std.process.exit(0);
     }
 
-    var t = taskFromArgs(&argsList);
+    var t = taskFromArgs(&argList.argList);
     try compute(&t, &graph, &units);
 }
 
@@ -136,44 +139,6 @@ fn showVersion() !void {
     const stdout = std.io.getStdOut().writer();
 
     try stdout.print("whats version {s}\n", .{VERSION});
-}
-
-fn parseArgsList(allocator: std.mem.Allocator, units: *std.MultiArrayList(conversion.Unit)) !std.MultiArrayList(arg.Arg) {
-    var argsList = std.MultiArrayList(arg.Arg){};
-
-    var argsIter = try std.process.ArgIterator.initWithAllocator(allocator);
-    defer argsIter.deinit();
-    _ = argsIter.next();
-
-    std.log.debug("Args:", .{});
-
-    var i: usize = 0;
-    while (argsIter.next()) |argStr| {
-        var targ = arg.Arg{
-            .allocator = allocator,
-        };
-
-        _ = targ.parse(argStr);
-
-        std.log.debug("{s} ", .{targ.term});
-        if (std.mem.eql(u8, targ.term, "-h") or std.mem.eql(u8, targ.term, "--help")) {
-            try showHelp(units);
-            std.process.exit(0);
-        } else if (std.mem.eql(u8, targ.term, "-v") or std.mem.eql(u8, targ.term, "--version")) {
-            try showVersion();
-            std.process.exit(0);
-        }
-
-        if (targ.value) |number| {
-            std.log.debug("{d} ", .{number});
-        }
-
-        i += 1;
-        try argsList.ensureTotalCapacity(allocator, i);
-        try argsList.append(allocator, targ);
-    }
-
-    return argsList;
 }
 
 fn taskFromArgs(argList: *const std.MultiArrayList(arg.Arg)) task.Task {
