@@ -7,7 +7,7 @@ const VERSION = build_options.version;
 pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
     const stdout = std.io.getStdOut().writer();
 
-    try stdout.print("Usage: whats [OPTION]... NUMBER UNIT [in|of] NUMBER UNIT\n", .{});
+    try stdout.print("Usage: whats [OPTION]... NUMBER [UNIT] [OPERATOR] [NUMBER] [UNIT]\n", .{});
     try stdout.print("A command for basic convertion and calculation.\n\n", .{});
     try stdout.print("  -h, --help       display this help and exit\n", .{});
     try stdout.print("  -v, --version    output version information and exit\n", .{});
@@ -32,9 +32,22 @@ pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
         }
         try stdout.print("  {s: <8}{s: <24}\n", .{ symbol, name });
     }
+    try stdout.print("\n", .{});
+    try stdout.print("CALCULATION:\n", .{});
+    try stdout.print("  {s: <8}{s: <24}\n", .{ "%", "percent" });
     try stdout.print("--------------------------------------------------------------------------------\n", .{});
     try stdout.print("Note:\n", .{});
     try stdout.print("  Symbols are case-sensitive, names are not.\n", .{});
+    try stdout.print("\n", .{});
+
+    try stdout.print("Operators:\n", .{});
+    try stdout.print("  in: Conversion, e.g. 2m in feet\n", .{});
+    try stdout.print("  to: Conversion or calculation, e.g. 2m to feet, 10 to 20\n", .{});
+    try stdout.print("  of: Calculation, e.g. 20% of 100, 20 of 100\n", .{});
+    try stdout.print("\n", .{});
+    try stdout.print("The operator is optional when units are present:\n", .{});
+    try stdout.print("  whats 2 m ft\n", .{});
+    try stdout.print("  whats 10% 100\n", .{});
     try stdout.print("\n", .{});
 
     try stdout.print("Examples:\n", .{});
@@ -42,9 +55,6 @@ pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
     try stdout.print("  whats 1.21 gigawatts in watts\n", .{});
     try stdout.print("  whats 8 kg in grams\n", .{});
     try stdout.print("  whats 1024 KiB in MiB\n", .{});
-    try stdout.print("\n", .{});
-    try stdout.print("The [in|of] keywords are optional:\n", .{});
-    try stdout.print("  whats 2 m ft\n", .{});
     try stdout.print("\n", .{});
     try stdout.print("Spaces are optional:\n", .{});
     try stdout.print("  whats 2m ft\n", .{});

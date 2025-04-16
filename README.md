@@ -32,7 +32,7 @@ exercise_ for me while getting into Zig.
 ## `whats --help`
 
 ```sh
-Usage: whats [OPTION]... NUMBER UNIT [in|of] NUMBER UNIT
+Usage: whats [OPTION]... NUMBER [UNIT] [OPERATOR] [NUMBER] [UNIT]
 A command for basic convertion and calculation.
 
   -h, --help       display this help and exit
@@ -357,18 +357,27 @@ VOLUME:
   bbl     barrel
   ___     oilbarrel
   ___     hogshead
+
+CALCULATION:
+  %       percent
 --------------------------------------------------------------------------------
 Note:
   Symbols are case-sensitive, names are not.
+
+Operators:
+  in: Conversion, e.g. 2m in feet
+  to: Conversion or calculation, e.g. 2m to feet, 10 to 20
+  of: Calculation, e.g. 20% of 100, 20 of 100
+
+The operator is optional when units are present:
+  whats 2 m ft
+  whats 10% 100
 
 Examples:
   whats 2 meters in feet
   whats 1.21 gigawatts in watts
   whats 8 kg in grams
   whats 1024 KiB in MiB
-
-The [in|of] keywords are optional:
-  whats 2 m ft
 
 Spaces are optional:
   whats 2m ft

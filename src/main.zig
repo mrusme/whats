@@ -98,6 +98,7 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
     const stdout = std.io.getStdOut().writer();
     const fV = t.*.fromValue orelse 0.0;
     const fU = t.*.fromUnit orelse "";
+    const op = t.*.operation;
     const tV = t.*.toValue orelse 0.0;
     const tU = t.*.toUnit orelse "";
 
@@ -135,8 +136,32 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
             return 0;
         },
         task.Type.Calculation => {
-            // TODO: Percentages etc
-            return error.NotImplemented;
+            var result: f64 = 0;
+
+            switch (op) {
+                .To => {
+                    result = ((tV - fV) / fV) * 100;
+                    if (result > 0) {
+                        try stdout.print("+{d}%\n", .{result});
+                    } else {
+                        try stdout.print("{d}%\n", .{result});
+                    }
+                },
+                .Of => {
+                    if (std.mem.eql(u8, fU, "%")) {
+                        result = (fV / 100.0) * tV;
+                        try stdout.print("{d}\n", .{result});
+                    } else {
+                        result = (fV / tV) * 100.0;
+                        try stdout.print("{d}%\n", .{result});
+                    }
+                },
+                else => {
+                    return error.NotImplemented;
+                },
+            }
+
+            return 0;
         },
         task.Type.Empty => {
             return error.NoTask;
