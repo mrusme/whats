@@ -1,6 +1,11 @@
 const std = @import("std");
 const xml = @import("xml");
+const kf = @import("known-folders");
 const conversion = @import("../conversion.zig");
+
+pub const known_folders_config = .{
+    .xdg_on_mac = true,
+};
 
 pub fn load(allocator: std.mem.Allocator, graph: *conversion.ConversionGraph) !std.MultiArrayList(conversion.Unit) {
     var units = std.MultiArrayList(conversion.Unit){};
@@ -9,11 +14,21 @@ pub fn load(allocator: std.mem.Allocator, graph: *conversion.ConversionGraph) !s
     try units.ensureTotalCapacity(allocator, 1);
     try units.append(allocator, eur);
 
-    const refetch = fileNeedsRefetch("/tmp/rates.xml");
-    if (refetch) {
-        try fetchRates(allocator, "/tmp/rates.xml");
+    const cache_dir = try kf.getPath(allocator, kf.KnownFolder.cache);
+    const rates_paths = [_][]const u8{ cache_dir.?, "whats-rates.xml" };
+    const rates_file = try std.fs.path.join(allocator, &rates_paths);
+    defer {
+        allocator.free(cache_dir.?);
+        allocator.free(rates_file);
     }
-    var rates = try parseRates(allocator, "/tmp/rates.xml");
+
+    std.log.debug("Using rates file: {s}", .{rates_file});
+
+    const refetch = fileNeedsRefetch(rates_file);
+    if (refetch) {
+        try fetchRates(allocator, rates_file);
+    }
+    var rates = try parseRates(allocator, rates_file);
     defer {
         var it = rates.iterator();
         while (it.next()) |entry| {

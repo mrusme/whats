@@ -20,6 +20,7 @@ exercise_ for me while getting into Zig.
 
 ## TODO
 
+- [ ] Refactor individual Units to be returned via load()
 - [ ] Temperature conversion
   - [ ] Celsius <-> Fahrenheit
   - [ ] Celsius <-> Kelvin

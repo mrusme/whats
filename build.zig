@@ -42,6 +42,12 @@ pub fn build(b: *std.Build) !void {
     }).module("xml");
     exe.root_module.addImport("xml", xml);
 
+    const known_folders = b.dependency("known_folders", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("known-folders");
+    exe.root_module.addImport("known-folders", known_folders);
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
