@@ -15,6 +15,21 @@ whats 1.21 gigawatts in watts
 This tool is in its **very** early stages and right now primarily a _finger
 exercise_ for me while getting into Zig.
 
+## TODO
+
+- [ ] Temperature conversion
+  - [ ] Celsius <-> Fahrenheit
+  - [ ] Celsius <-> Kelvin
+  - [ ] Kelvin <-> Fahrenheit
+- [ ] Percentage calculation:
+  - [ ] `whats 10 of 100` -> `10%`
+  - [ ] `whats 200 of 100` -> `200%`
+  - [ ] `whats 50% of 100` -> `50`
+  - [ ] `whats 80 to 100` -> `+25%`
+  - [ ] `whats 100 to 50` -> `-50%`
+- [ ] Add lazy loading of data based on command (e.g. if no money required don't
+      load)
+
 ## `whats --help`
 
 ```sh
