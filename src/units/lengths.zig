@@ -1,7 +1,7 @@
 const std = @import("std");
 const conversion = @import("../conversion.zig");
 
-pub const Units = .{
+pub const Units = [_]conversion.Unit{
     conversion.Unit{ .name = "meter", .plural = "+s", .symbol = "m", .ratio = 1.0, .category = conversion.Category.length },
     conversion.Unit{ .name = "attometer", .plural = "+s", .symbol = "am", .ratio = 0.00000001, .category = conversion.Category.length },
     conversion.Unit{ .name = "femtometer", .plural = "+s", .symbol = "fm", .ratio = 0.0000001, .category = conversion.Category.length },
@@ -29,6 +29,7 @@ pub const Units = .{
     conversion.Unit{ .name = "furlong", .plural = "+s", .symbol = "fur", .ratio = 201.168, .category = conversion.Category.length },
 };
 
+pub const reference_unit = Units[0];
 pub const meter = Units[0];
 pub const attometer = Units[1];
 pub const femtometer = Units[2];
@@ -56,7 +57,7 @@ pub const league = Units[23];
 pub const furlong = Units[24];
 
 pub fn load(graph: *conversion.ConversionGraph) !void {
-    inline for (Units) |unit| {
-        try graph.addConversion(unit, meter, unit.ratio);
+    for (0.., Units) |i, unit| {
+        try graph.addConversion(Units[i], reference_unit, unit.ratio);
     }
 }

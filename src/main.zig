@@ -7,13 +7,12 @@ const data = @import("units/data.zig");
 const energy = @import("units/energy.zig");
 const lengths = @import("units/lengths.zig");
 const mass = @import("units/mass.zig");
+const money = @import("units/money.zig");
 const power = @import("units/power.zig");
 const pressure = @import("units/pressure.zig");
 const time = @import("units/time.zig");
 const volume = @import("units/volume.zig");
 const task = @import("task.zig");
-
-const Allocator = std.mem.Allocator;
 
 const VERSION = build_options.version;
 
@@ -29,14 +28,16 @@ const Units =
 
 pub fn main() !void {
     var allocator = std.heap.page_allocator;
-
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    var gpa2 = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    defer {
+        const deinit_status = gpa.deinit();
+        if (deinit_status == .leak) {
+            @panic("LEAK");
+        }
+    }
     const gpallocator = gpa.allocator();
-    const gpallocator2 = gpa2.allocator();
 
-    var graph = conversion.ConversionGraph.init(gpallocator2);
+    var graph = conversion.ConversionGraph.init(gpallocator);
     defer graph.deinit();
 
     try data.load(&graph);
@@ -48,8 +49,30 @@ pub fn main() !void {
     try time.load(&graph);
     try volume.load(&graph);
 
-    var al = std.MultiArrayList(arg.Arg){};
-    defer al.deinit(gpallocator);
+    var units = try money.load(gpallocator, &graph);
+    defer {
+        for (units.items(.name), units.items(.symbol), units.items(.plural), units.items(.category)) |name, symbol, plural, category| {
+            if (category == conversion.Category.money and !std.mem.eql(u8, name, "EUR")) {
+                if (name.len > 0) gpallocator.free(name);
+                if (symbol.len > 0) gpallocator.free(symbol);
+                if (plural.len > 0) gpallocator.free(plural);
+            }
+        }
+        units.deinit(gpallocator);
+    }
+
+    try units.ensureTotalCapacity(gpallocator, units.len + Units.len);
+    for (Units) |unit| {
+        try units.append(gpallocator, unit);
+    }
+
+    var argsList = std.MultiArrayList(arg.Arg){};
+    defer {
+        while (argsList.pop()) |targ| {
+            @constCast(&targ).deinit();
+        }
+        argsList.deinit(gpallocator);
+    }
 
     var argsIter = try std.process.ArgIterator.initWithAllocator(allocator);
     defer argsIter.deinit();
@@ -64,8 +87,6 @@ pub fn main() !void {
         };
 
         _ = targ.parse(argStr);
-        // TODO: Where is this supposed to happen?
-        // defer targ.deinit();
 
         std.log.debug("{s} ", .{targ.term});
         if (std.mem.eql(u8, targ.term, "-h") or std.mem.eql(u8, targ.term, "--help")) {
@@ -81,25 +102,12 @@ pub fn main() !void {
         }
 
         i += 1;
-        try al.ensureTotalCapacity(gpallocator, i);
-        try al.append(gpallocator, targ);
+        try argsList.ensureTotalCapacity(gpallocator, i);
+        try argsList.append(gpallocator, targ);
     }
 
-    // for (al.items(.term), al.items(.value)) |*term, *value| {
-    //     std.log.debug("{s} {?d}\n", .{ term.*, value.* });
-    // }
-
-    // Examples:
-    // 11m ft
-    // 11m in ft
-    // 11 m in ft
-    //
-    // 11cm in
-    // 11cm in in
-    // 11 cm in in
-
-    var t = taskFromArgs(&allocator, &al);
-    try compute(&t, &graph);
+    var t = taskFromArgs(&argsList);
+    try compute(&t, &graph, &units);
 }
 
 fn showHelp() !void {
@@ -114,7 +122,7 @@ fn showHelp() !void {
     try stdout.print("Units:\n", .{});
     try stdout.print("  {s: <8}{s: <24}{s}\n", .{ "Symbol", "Name", "Category" });
     try stdout.print("--------------------------------------------------------------------------------\n", .{});
-    inline for (Units) |unit| {
+    for (Units) |unit| {
         try stdout.print("  {s: <8}{s: <24}{s}\n", .{ unit.symbol, unit.name, @tagName(unit.category) });
     }
     try stdout.print("--------------------------------------------------------------------------------\n", .{});
@@ -145,13 +153,12 @@ fn showVersion() !void {
     try stdout.print("whats version {s}\n", .{VERSION});
 }
 
-fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) task.Task {
+fn taskFromArgs(argList: *std.MultiArrayList(arg.Arg)) task.Task {
     if (argList.len < 2) {} else if (argList.len == 2) {
         // Example: 3m ft
         const arg1 = argList.get(0);
         const arg2 = argList.get(1);
         return task.Task{
-            .allocator = allocator,
             .type = task.Type.Conversion,
             .fromValue = arg1.value,
             .fromUnit = arg1.term,
@@ -168,7 +175,6 @@ fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) ta
         {
             // Example: 22m in ft
             return task.Task{
-                .allocator = allocator,
                 .type = task.Type.Conversion,
                 .fromValue = arg1.value,
                 .fromUnit = arg1.term,
@@ -181,7 +187,6 @@ fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) ta
             {
                 // Example: 22 m ft
                 return task.Task{
-                    .allocator = allocator,
                     .type = task.Type.Conversion,
                     .fromValue = arg1.value,
                     .fromUnit = arg2.term,
@@ -201,7 +206,6 @@ fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) ta
         {
             // Example: 22 m in ft
             return task.Task{
-                .allocator = allocator,
                 .type = task.Type.Conversion,
                 .fromValue = arg1.value,
                 .fromUnit = arg2.term,
@@ -212,7 +216,6 @@ fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) ta
     }
 
     return task.Task{
-        .allocator = allocator,
         .type = task.Type.Undefined,
         .fromValue = null,
         .fromUnit = null,
@@ -221,7 +224,7 @@ fn taskFromArgs(allocator: *Allocator, argList: *std.MultiArrayList(arg.Arg)) ta
     };
 }
 
-fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
+fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiArrayList(conversion.Unit)) !void {
     const stdout = std.io.getStdOut().writer();
     const fV = t.*.fromValue orelse 0.0;
     const fU = t.*.fromUnit orelse "";
@@ -230,15 +233,16 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
 
     std.log.debug("{d} {s} -> {d} {s}", .{ fV, fU, tV, tU });
 
-    const rfUnit = getUnit(fU);
-    const rtUnit = getUnit(tU);
-
-    if (rfUnit == null or rtUnit == null) {
-        return;
+    if (fU.len == 0 or tU.len == 0) {
+        return error.InvalidUnit;
     }
 
+    const rfUnit = try getUnit(units, fU);
+    const rtUnit = try getUnit(units, tU);
+
     var tmp = fV;
-    const path = try graph.resolveConversion(rfUnit.?, rtUnit.?);
+    const path = try graph.resolveConversion(&rfUnit, &rtUnit);
+    defer graph.allocator.free(path);
     for (path) |conv| {
         std.log.debug("Conversion: {s} -> {s} using formula: {s}", .{ conv.from.name, conv.to.name, conv.formula });
         tmp = conv.apply(tmp);
@@ -248,24 +252,36 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph) !void {
     try stdout.print("{d}\n", .{tmp});
 }
 
-fn getUnit(input: []const u8) ?conversion.Unit {
-    inline for (Units) |unit| {
-        if (std.mem.eql(u8, input, unit.symbol)) {
-            return unit;
-        } else if (std.ascii.eqlIgnoreCase(input, unit.name)) {
-            return unit;
-        } else {
-            if (unit.plural[0] == '+' and
-                slicesMatch(input, unit.name, unit.plural[1..]))
+const UnitError = error{
+    Oops,
+};
+
+fn getUnit(units: *std.MultiArrayList(conversion.Unit), input: []const u8) !conversion.Unit {
+    if (input.len == 0) {
+        return error.InvalidUnit;
+    }
+
+    const names = units.items(.name);
+    const symbols = units.items(.symbol);
+    const plurals = units.items(.plural);
+
+    for (names, symbols, plurals, 0..) |name, symbol, plural, i| {
+        if (symbol.len > 0 and std.mem.eql(u8, input, symbol)) {
+            return units.get(i);
+        } else if (name.len > 0 and std.ascii.eqlIgnoreCase(input, name)) {
+            return units.get(i);
+        } else if (plural.len > 0) {
+            if (plural[0] == '+' and plural.len > 1 and
+                slicesMatch(input, name, plural[1..]))
             {
-                return unit;
-            } else if (std.mem.eql(u8, input, unit.plural)) {
-                return unit;
+                return units.get(i);
+            } else if (std.mem.eql(u8, input, plural)) {
+                return units.get(i);
             }
         }
     }
 
-    return null;
+    return error.UnitNotFound;
 }
 
 fn slicesMatch(full: []const u8, a: []const u8, b: []const u8) bool {

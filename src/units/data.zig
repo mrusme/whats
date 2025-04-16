@@ -1,7 +1,7 @@
 const std = @import("std");
 const conversion = @import("../conversion.zig");
 
-pub const Units = .{
+pub const Units = [_]conversion.Unit{
     conversion.Unit{ .name = "bit", .plural = "+s", .symbol = "b", .ratio = 1.0, .category = conversion.Category.data },
     conversion.Unit{ .name = "kilobit", .plural = "+s", .symbol = "Kb", .ratio = 1000.0, .category = conversion.Category.data },
     conversion.Unit{ .name = "megabit", .plural = "+s", .symbol = "Mb", .ratio = 1000000.0, .category = conversion.Category.data },
@@ -30,10 +30,10 @@ pub const Units = .{
     conversion.Unit{ .name = "yobibyte", .plural = "+s", .symbol = "YiB", .ratio = 9.671406556917033e+24, .category = conversion.Category.data },
 };
 
-const bit = Units[0];
+pub const reference_unit = Units[0];
 
 pub fn load(graph: *conversion.ConversionGraph) !void {
-    inline for (Units) |unit| {
-        try graph.addConversion(unit, bit, unit.ratio);
+    for (0.., Units) |i, unit| {
+        try graph.addConversion(Units[i], reference_unit, unit.ratio);
     }
 }

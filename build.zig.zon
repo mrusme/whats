@@ -37,8 +37,12 @@
     // internet connectivity.
     .dependencies = .{
         .bfstree_zig = .{
-            .url = "git+https://github.com/mrusme/bfstree.zig/?ref=HEAD#81bac2ee1992780a9ca96ae07c6b56217027e44d",
-            .hash = "bfstree_zig-0.0.1-72YEj2EjAAAS8hR9UDjTZs6BWAKe4fk-1o_ZKv02E2eT",
+            .url = "git+https://github.com/mrusme/bfstree.zig/?ref=HEAD#ad70e6d28f9a7ed83f5db793433c72e57df7787b",
+            .hash = "bfstree_zig-0.0.1-72YEj3YpAACHh-jEIvu-XSu63JASEr7RuULt6N9mvQWU",
+        },
+        .xml = .{
+            .url = "git+https://github.com/ianprime0509/zig-xml/?ref=HEAD#c2b02045810108e7a807855dc592157f44d32fb1",
+            .hash = "xml-0.1.0-ZTbP35VkAgAp2cDlvsPuL7SWVZWwPg-V99LmVRSHbCtL",
         },
     },
     .paths = .{

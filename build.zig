@@ -36,6 +36,12 @@ pub fn build(b: *std.Build) !void {
     }).module("bfstree");
     exe.root_module.addImport("bfstree", bfstree);
 
+    const xml = b.dependency("xml", .{
+        .target = target,
+        .optimize = optimize,
+    }).module("xml");
+    exe.root_module.addImport("xml", xml);
+
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).

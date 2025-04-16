@@ -2,11 +2,11 @@ const std = @import("std");
 const bfstree = @import("bfstree");
 
 pub const Category = enum {
-    none,
     data,
     energy,
     length,
     mass,
+    money,
     power,
     pressure,
     temperature,
@@ -47,7 +47,10 @@ pub const ConversionGraph = struct {
     }
 
     pub fn deinit(self: *ConversionGraph) void {
-        self.tree.edges.deinit();
+        self.tree.deinit();
+        for (self.conversions.items) |item| {
+            self.allocator.free(item.formula);
+        }
         self.conversions.deinit();
     }
 
@@ -75,11 +78,12 @@ pub const ConversionGraph = struct {
         try self.tree.addEdge(bfstree.Edge{ .from = to.name, .to = from.name });
     }
 
-    pub fn resolveConversion(self: *ConversionGraph, from: Unit, to: Unit) ![]Conversion {
-        const found_path = try bfstree.findPath(&self.tree, from.name, to.name, self.allocator);
+    pub fn resolveConversion(self: *ConversionGraph, from: *const Unit, to: *const Unit) ![]Conversion {
+        const found_path = try self.tree.findPath(from.name, to.name);
         var result = std.ArrayList(Conversion).init(self.allocator);
-
         if (found_path) |path| {
+            defer @constCast(&path).deinit();
+
             for (path.edges.items) |edge| {
                 const conv = try self.lookupConversion(edge.from, edge.to);
                 try result.append(conv);

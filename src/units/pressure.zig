@@ -1,7 +1,7 @@
 const std = @import("std");
 const conversion = @import("../conversion.zig");
 
-pub const Units = .{
+pub const Units = [_]conversion.Unit{
     conversion.Unit{ .name = "pascal", .plural = "+s", .symbol = "Pa", .ratio = 1.0, .category = conversion.Category.pressure },
     conversion.Unit{ .name = "quectopascal", .plural = "+s", .symbol = "qPa", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.pressure },
     conversion.Unit{ .name = "rontopascal", .plural = "+s", .symbol = "rPa", .ratio = 0.000000000000000000000000001, .category = conversion.Category.pressure },
@@ -52,10 +52,10 @@ pub const Units = .{
     conversion.Unit{ .name = "torr", .plural = "+s", .symbol = "Torr", .ratio = 133.322368421, .category = conversion.Category.pressure },
 };
 
-const pascal = Units[0];
+pub const reference_unit = Units[0];
 
 pub fn load(graph: *conversion.ConversionGraph) !void {
-    inline for (Units) |unit| {
-        try graph.addConversion(unit, pascal, unit.ratio);
+    for (0.., Units) |i, unit| {
+        try graph.addConversion(Units[i], reference_unit, unit.ratio);
     }
 }

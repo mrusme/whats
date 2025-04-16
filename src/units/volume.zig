@@ -1,7 +1,7 @@
 const std = @import("std");
 const conversion = @import("../conversion.zig");
 
-pub const Units = .{
+pub const Units = [_]conversion.Unit{
     conversion.Unit{ .name = "liter", .plural = "+s", .symbol = "L", .ratio = 1.0, .category = conversion.Category.volume },
     conversion.Unit{ .name = "quectoliter", .plural = "+s", .symbol = "qL", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.volume },
     conversion.Unit{ .name = "rontoliter", .plural = "+s", .symbol = "rL", .ratio = 0.000000000000000000000000001, .category = conversion.Category.volume },
@@ -51,10 +51,10 @@ pub const Units = .{
     conversion.Unit{ .name = "hogshead", .plural = "+s", .symbol = "___", .ratio = 238.480942392, .category = conversion.Category.volume },
 };
 
-const liter = Units[0];
+pub const reference_unit = Units[0];
 
 pub fn load(graph: *conversion.ConversionGraph) !void {
-    inline for (Units) |unit| {
-        try graph.addConversion(unit, liter, unit.ratio);
+    for (0.., Units) |i, unit| {
+        try graph.addConversion(Units[i], reference_unit, unit.ratio);
     }
 }

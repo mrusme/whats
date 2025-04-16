@@ -1,7 +1,7 @@
 const std = @import("std");
 const conversion = @import("../conversion.zig");
 
-pub const Units = .{
+pub const Units = [_]conversion.Unit{
     conversion.Unit{ .name = "second", .plural = "+s", .symbol = "s", .ratio = 1.0, .category = conversion.Category.time },
     conversion.Unit{ .name = "quectosecond", .plural = "+s", .symbol = "qs", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.time },
     conversion.Unit{ .name = "rontosecond", .plural = "+s", .symbol = "rs", .ratio = 0.000000000000000000000000001, .category = conversion.Category.time },
@@ -43,10 +43,10 @@ pub const Units = .{
     conversion.Unit{ .name = "score", .plural = "+s", .symbol = "___", .ratio = 631152000.0, .category = conversion.Category.time },
 };
 
-const second = Units[0];
+pub const reference_unit = Units[0];
 
 pub fn load(graph: *conversion.ConversionGraph) !void {
-    inline for (Units) |unit| {
-        try graph.addConversion(unit, second, unit.ratio);
+    for (0.., Units) |i, unit| {
+        try graph.addConversion(Units[i], reference_unit, unit.ratio);
     }
 }

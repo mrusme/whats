@@ -1,7 +1,7 @@
 const std = @import("std");
 const conversion = @import("../conversion.zig");
 
-pub const Units = .{
+pub const Units = [_]conversion.Unit{
     conversion.Unit{ .name = "watt", .plural = "+s", .symbol = "W", .ratio = 1.0, .category = conversion.Category.power },
     conversion.Unit{ .name = "quectowatt", .plural = "+s", .symbol = "qW", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.power },
     conversion.Unit{ .name = "rontowatt", .plural = "+s", .symbol = "rW", .ratio = 0.000000000000000000000000001, .category = conversion.Category.power },
@@ -29,10 +29,10 @@ pub const Units = .{
     conversion.Unit{ .name = "quettawatt", .plural = "+s", .symbol = "QW", .ratio = 1000000000000000000000000000000.0, .category = conversion.Category.power },
 };
 
-const watt = Units[0];
+pub const reference_unit = Units[0];
 
 pub fn load(graph: *conversion.ConversionGraph) !void {
-    inline for (Units) |unit| {
-        try graph.addConversion(unit, watt, unit.ratio);
+    for (0.., Units) |i, unit| {
+        try graph.addConversion(Units[i], reference_unit, unit.ratio);
     }
 }

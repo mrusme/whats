@@ -1,15 +1,12 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
 
 pub const Arg = struct {
-    allocator: *Allocator,
+    allocator: *std.mem.Allocator,
     value: ?f64 = null,
     term: []u8 = "",
 
     pub fn deinit(self: *Arg) void {
-        if (self.allocator) |allocator| {
-            allocator.free(self.term);
-        }
+        self.allocator.free(self.term);
     }
 
     pub fn parse(self: *Arg, s: []const u8) bool {
@@ -30,7 +27,7 @@ pub const Arg = struct {
         var endIndex = startIndex;
         while (endIndex < s.len and
             (std.ascii.isDigit(s[endIndex]) or
-            s[endIndex] == '.')) : (endIndex += 1)
+                s[endIndex] == '.')) : (endIndex += 1)
         {}
 
         _ = self.setValue(s[startIndex..endIndex]);
@@ -54,8 +51,8 @@ pub const Arg = struct {
     fn setValue(self: *Arg, str: []const u8) bool {
         self.value = std.fmt.parseFloat(f64, str) catch |err|
             switch (err) {
-            error.InvalidCharacter => return false,
-        };
+                error.InvalidCharacter => return false,
+            };
 
         return true;
     }
