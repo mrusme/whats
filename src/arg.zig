@@ -1,12 +1,14 @@
 const std = @import("std");
 
 pub const Arg = struct {
-    allocator: *std.mem.Allocator,
+    allocator: std.mem.Allocator,
     value: ?f64 = null,
     term: []u8 = "",
 
     pub fn deinit(self: *Arg) void {
-        self.allocator.free(self.term);
+        if (self.term.len > 0) {
+            self.allocator.free(self.term);
+        }
     }
 
     pub fn parse(self: *Arg, s: []const u8) bool {

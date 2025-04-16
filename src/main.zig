@@ -18,7 +18,7 @@ const task = @import("task.zig");
 const VERSION = build_options.version;
 
 pub fn main() !void {
-    var allocator = std.heap.page_allocator;
+    // const allocator = std.heap.page_allocator;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer {
         const deinit_status = gpa.deinit();
@@ -69,44 +69,13 @@ pub fn main() !void {
         try units.append(gpallocator, unit);
     }
 
-    var argsList = std.MultiArrayList(arg.Arg){};
+    const argsList = try parseArgsList(gpallocator, &units);
     defer {
-        while (argsList.pop()) |targ| {
-            @constCast(&targ).deinit();
+        for (0.., argsList.items(.term)) |i, _| {
+            const tmp = argsList.get(i);
+            @constCast(&tmp).deinit();
         }
-        argsList.deinit(gpallocator);
-    }
-
-    var argsIter = try std.process.ArgIterator.initWithAllocator(allocator);
-    defer argsIter.deinit();
-    _ = argsIter.next();
-
-    std.log.debug("Args:", .{});
-
-    var i: usize = 0;
-    while (argsIter.next()) |argStr| {
-        var targ = arg.Arg{
-            .allocator = &allocator,
-        };
-
-        _ = targ.parse(argStr);
-
-        std.log.debug("{s} ", .{targ.term});
-        if (std.mem.eql(u8, targ.term, "-h") or std.mem.eql(u8, targ.term, "--help")) {
-            try showHelp(&units);
-            std.process.exit(0);
-        } else if (std.mem.eql(u8, targ.term, "-v") or std.mem.eql(u8, targ.term, "--version")) {
-            try showVersion();
-            std.process.exit(0);
-        }
-
-        if (targ.value) |number| {
-            std.log.debug("{d} ", .{number});
-        }
-
-        i += 1;
-        try argsList.ensureTotalCapacity(gpallocator, i);
-        try argsList.append(gpallocator, targ);
+        @constCast(&argsList).deinit(gpallocator);
     }
 
     var t = taskFromArgs(&argsList);
@@ -169,7 +138,45 @@ fn showVersion() !void {
     try stdout.print("whats version {s}\n", .{VERSION});
 }
 
-fn taskFromArgs(argList: *std.MultiArrayList(arg.Arg)) task.Task {
+fn parseArgsList(allocator: std.mem.Allocator, units: *std.MultiArrayList(conversion.Unit)) !std.MultiArrayList(arg.Arg) {
+    var argsList = std.MultiArrayList(arg.Arg){};
+
+    var argsIter = try std.process.ArgIterator.initWithAllocator(allocator);
+    defer argsIter.deinit();
+    _ = argsIter.next();
+
+    std.log.debug("Args:", .{});
+
+    var i: usize = 0;
+    while (argsIter.next()) |argStr| {
+        var targ = arg.Arg{
+            .allocator = allocator,
+        };
+
+        _ = targ.parse(argStr);
+
+        std.log.debug("{s} ", .{targ.term});
+        if (std.mem.eql(u8, targ.term, "-h") or std.mem.eql(u8, targ.term, "--help")) {
+            try showHelp(units);
+            std.process.exit(0);
+        } else if (std.mem.eql(u8, targ.term, "-v") or std.mem.eql(u8, targ.term, "--version")) {
+            try showVersion();
+            std.process.exit(0);
+        }
+
+        if (targ.value) |number| {
+            std.log.debug("{d} ", .{number});
+        }
+
+        i += 1;
+        try argsList.ensureTotalCapacity(allocator, i);
+        try argsList.append(allocator, targ);
+    }
+
+    return argsList;
+}
+
+fn taskFromArgs(argList: *const std.MultiArrayList(arg.Arg)) task.Task {
     if (argList.len < 2) {} else if (argList.len == 2) {
         // Example: 3m ft
         const arg1 = argList.get(0);
