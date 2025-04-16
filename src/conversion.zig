@@ -29,7 +29,26 @@ pub const Conversion = struct {
     ratio: f64,
 
     pub fn apply(self: Conversion, x: f64) f64 {
-        return x * self.ratio;
+        // It's ugly but it's honest work
+        if (std.mem.eql(u8, self.from.name, "celsius") and
+            std.mem.eql(u8, self.to.name, "fahrenheit"))
+        {
+            return x * 1.8 + 32;
+        } else if (std.mem.eql(u8, self.from.name, "fahrenheit") and
+            std.mem.eql(u8, self.to.name, "celsius"))
+        {
+            return (x - 32) / 1.8;
+        } else if (std.mem.eql(u8, self.from.name, "celsius") and
+            std.mem.eql(u8, self.to.name, "kelvin"))
+        {
+            return x + 273.15;
+        } else if (std.mem.eql(u8, self.from.name, "kelvin") and
+            std.mem.eql(u8, self.to.name, "celsius"))
+        {
+            return x - 273.15;
+        } else {
+            return x * self.ratio;
+        }
     }
 };
 

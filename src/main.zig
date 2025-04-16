@@ -10,6 +10,7 @@ const mass = @import("units/mass.zig");
 const money = @import("units/money.zig");
 const power = @import("units/power.zig");
 const pressure = @import("units/pressure.zig");
+const temperature = @import("units/temperature.zig");
 const time = @import("units/time.zig");
 const volume = @import("units/volume.zig");
 const task = @import("task.zig");
@@ -37,6 +38,7 @@ pub fn main() !void {
         mass.Units ++
         power.Units ++
         pressure.Units ++
+        temperature.Units ++
         time.Units ++
         volume.Units;
 
@@ -46,6 +48,7 @@ pub fn main() !void {
     try mass.load(&graph);
     try power.load(&graph);
     try pressure.load(&graph);
+    try temperature.load(&graph);
     try time.load(&graph);
     try volume.load(&graph);
 

@@ -20,11 +20,6 @@ exercise_ for me while getting into Zig.
 
 ## TODO
 
-- [ ] Refactor individual Units to be returned via load()
-- [ ] Temperature conversion
-  - [ ] Celsius <-> Fahrenheit
-  - [ ] Celsius <-> Kelvin
-  - [ ] Kelvin <-> Fahrenheit
 - [ ] Percentage calculation:
   - [ ] `whats 10 of 100` -> `10%`
   - [ ] `whats 200 of 100` -> `200%`
@@ -44,271 +39,324 @@ A command for basic convertion and calculation.
   -v, --version    output version information and exit
 
 Units:
-  Symbol  Name                    Category
+  Symbol  Name
 --------------------------------------------------------------------------------
-  b       bit                     data
-  Kb      kilobit                 data
-  Mb      megabit                 data
-  Gb      gigabit                 data
-  Tb      terabit                 data
-  Pb      petabit                 data
-  Eb      exabit                  data
-  Zb      zettabit                data
-  Yb      yottabit                data
-  B       byte                    data
-  KB      kilobyte                data
-  MB      megabyte                data
-  GB      gigabyte                data
-  TB      terabyte                data
-  PB      petabyte                data
-  EB      exabyte                 data
-  ZB      zettabyte               data
-  YB      yottabyte               data
-  KiB     kibibyte                data
-  MiB     mebibyte                data
-  GiB     gibibyte                data
-  TiB     tebibyte                data
-  PiB     pebibyte                data
-  EiB     exbibyte                data
-  ZiB     zebibyte                data
-  YiB     yobibyte                data
-  J       joule                   energy
-  qJ      quectojoule             energy
-  rJ      rontojoule              energy
-  yJ      yoctojoule              energy
-  zJ      zeptojoule              energy
-  aJ      attojoule               energy
-  fJ      femtojoule              energy
-  pJ      picojoule               energy
-  nJ      nanojoule               energy
-  μJ      microjoule              energy
-  mJ      millijoule              energy
-  cJ      centijoule              energy
-  dJ      decijoule               energy
-  daJ     decajoule               energy
-  hJ      hectojoule              energy
-  kJ      kilojoule               energy
-  MJ      megajoule               energy
-  GJ      gigajoule               energy
-  TJ      terajoule               energy
-  PJ      petajoule               energy
-  EJ      exajoule                energy
-  ZJ      zettajoule              energy
-  YJ      yottajoule              energy
-  RJ      ronnajoule              energy
-  QJ      quettajoule             energy
-  Wh      watthour                energy
-  kWh     kilowatthour            energy
-  MWh     megawatthour            energy
-  GWh     gigawatthour            energy
-  TWh     terawatthour            energy
-  PWh     petawatthour            energy
-  eV      electronvolt            energy
-  cal     calorie                 energy
-  m       meter                   length
-  am      attometer               length
-  fm      femtometer              length
-  pm      picometer               length
-  nm      nanometer               length
-  µm      micrometer              length
-  mm      millimeter              length
-  cm      centimeter              length
-  dm      decimeter               length
-  dam     decameter               length
-  hm      hectometer              length
-  km      kilometer               length
-  Mm      megameter               length
-  Gm      gigameter               length
-  Tm      terameter               length
-  Pm      petameter               length
-  Em      exameter                length
-  Å       angstrom                length
-  in      inch                    length
-  ft      foot                    length
-  yd      yard                    length
-  mi      mile                    length
-  nmi     nauticalmile            length
-  lea     league                  length
-  fur     furlong                 length
-  g       gram                    mass
-  qg      quectogram              mass
-  rg      rontogram               mass
-  yg      yoctogram               mass
-  zg      zeptogram               mass
-  ag      attogram                mass
-  fg      femtogram               mass
-  pg      picogram                mass
-  ng      nanogram                mass
-  μg      microgram               mass
-  mg      milligram               mass
-  cg      centigram               mass
-  dg      decigram                mass
-  dag     decagram                mass
-  hg      hectogram               mass
-  kg      kilogram                mass
-  Mg      megagram                mass
-  Gg      gigagram                mass
-  Tg      teragram                mass
-  Pg      petagram                mass
-  Eg      exagram                 mass
-  Zg      zettagram               mass
-  Yg      yottagram               mass
-  Rg      ronnagram               mass
-  Qg      quettagram              mass
-  gr      grain                   mass
-  dr      drachm                  mass
-  oz      ounce                   mass
-  lb      pound                   mass
-  st      stone                   mass
-  t       ton                     mass
-  ___     slug                    mass
-  W       watt                    power
-  qW      quectowatt              power
-  rW      rontowatt               power
-  yW      yoctowatt               power
-  zW      zeptowatt               power
-  aW      attowatt                power
-  fW      femtowatt               power
-  pW      picowatt                power
-  nW      nanowatt                power
-  μW      microwatt               power
-  mW      milliwatt               power
-  cW      centiwatt               power
-  dW      deciwatt                power
-  daW     decawatt                power
-  hW      hectowatt               power
-  kW      kilowatt                power
-  MW      megawatt                power
-  GW      gigawatt                power
-  TW      terawatt                power
-  PW      petawatt                power
-  EW      exawatt                 power
-  ZW      zettawatt               power
-  YW      yottawatt               power
-  RW      ronnawatt               power
-  QW      quettawatt              power
-  Pa      pascal                  pressure
-  qPa     quectopascal            pressure
-  rPa     rontopascal             pressure
-  yPa     yoctopascal             pressure
-  zPa     zeptopascal             pressure
-  aPa     attopascal              pressure
-  fPa     femtopascal             pressure
-  pPa     picopascal              pressure
-  nPa     nanopascal              pressure
-  μPa     micropascal             pressure
-  mPa     millipascal             pressure
-  cPa     centipascal             pressure
-  dPa     decipascal              pressure
-  daPa    decapascal              pressure
-  hPa     hectopascal             pressure
-  kPa     kilopascal              pressure
-  MPa     megapascal              pressure
-  GPa     gigapascal              pressure
-  TPa     terapascal              pressure
-  PPa     petapascal              pressure
-  EPa     exapascal               pressure
-  ZPa     zettapascal             pressure
-  YPa     yottapascal             pressure
-  RPa     ronnapascal             pressure
-  QPa     quettapascal            pressure
-  mbar    millibar                pressure
-  cbar    centibar                pressure
-  dbar    decibar                 pressure
-  bar     bar                     pressure
-  kbar    kilobar                 pressure
-  Mbar    megabar                 pressure
-  Gbar    gigabar                 pressure
-  at      technicalatmosphere     pressure
-  atm     standardatmosphere      pressure
-  Ba      barye                   pressure
-  inH20   inchofwatercolumn       pressure
-  mmH20   meterofwatercolumn      pressure
-  inHg    inchofmercury           pressure
-  mmHg    meterofmercury          pressure
-  N/m²    newtonpersquaremeter    pressure
-  psi     poundforcepersquareinch pressure
-  Torr    torr                    pressure
-  s       second                  time
-  qs      quectosecond            time
-  rs      rontosecond             time
-  ys      yoctosecond             time
-  zs      zeptosecond             time
-  as      attosecond              time
-  fs      femtosecond             time
-  ps      picosecond              time
-  ns      nanosecond              time
-  μs      microsecond             time
-  ms      millisecond             time
-  cs      centisecond             time
-  ds      decisecond              time
-  das     decasecond              time
-  hs      hectosecond             time
-  ks      kilosecond              time
-  Ms      megasecond              time
-  Gs      gigasecond              time
-  Ts      terasecond              time
-  Ps      petasecond              time
-  Es      exasecond               time
-  Zs      zettasecond             time
-  Ys      yottasecond             time
-  Rs      ronnasecond             time
-  Qs      quettasecond            time
-  min     minute                  time
-  hr      hour                    time
-  d       day                     time
-  ___     month                   time
-  yr      year                    time
-  ___     decade                  time
-  ___     century                 time
-  ___     millennium              time
-  𝑡ₚ      plancktime              time
-  ___     fortnight               time
-  ___     score                   time
-  L       liter                   volume
-  qL      quectoliter             volume
-  rL      rontoliter              volume
-  yL      yoctoliter              volume
-  zL      zeptoliter              volume
-  aL      attoliter               volume
-  fL      femtoliter              volume
-  pL      picoliter               volume
-  nL      nanoliter               volume
-  μL      microliter              volume
-  mL      milliliter              volume
-  cL      centiliter              volume
-  dL      deciliter               volume
-  daL     decaliter               volume
-  hL      hectoliter              volume
-  kL      kiloliter               volume
-  ML      megaliter               volume
-  GL      gigaliter               volume
-  TL      teraliter               volume
-  PL      petaliter               volume
-  EL      exaliter                volume
-  ZL      zettaliter              volume
-  YL      yottaliter              volume
-  RL      ronnaliter              volume
-  QL      quettaliter             volume
-  min     minim                   volume
-  qt      quart                   volume
-  pt      pint                    volume
-  gal     gallon                  volume
-  floz    fluidounce              volume
-  fldr    usfluiddram             volume
-  tsp     teaspoon                volume
-  tbsp    tablespoon              volume
-  uspt    uspint                  volume
-  usqt    usquart                 volume
-  pot     uspottle                volume
-  usgal   usgallon                volume
-  usfloz  usfluidounce            volume
-  c       uscup                   volume
-  jig     usshot                  volume
-  gi      usgill                  volume
-  bbl     barrel                  volume
-  ___     oilbarrel               volume
-  ___     hogshead                volume
+MONEY:
+  EUR     EUR
+  RON     RON
+  PLN     PLN
+  USD     USD
+  ILS     ILS
+  KRW     KRW
+  MYR     MYR
+  MXN     MXN
+  NOK     NOK
+  JPY     JPY
+  ISK     ISK
+  SGD     SGD
+  BGN     BGN
+  DKK     DKK
+  TRY     TRY
+  ZAR     ZAR
+  CZK     CZK
+  CNY     CNY
+  BRL     BRL
+  PHP     PHP
+  NZD     NZD
+  HKD     HKD
+  INR     INR
+  AUD     AUD
+  IDR     IDR
+  GBP     GBP
+  SEK     SEK
+  THB     THB
+  CHF     CHF
+  CAD     CAD
+  HUF     HUF
+
+DATA:
+  b       bit
+  Kb      kilobit
+  Mb      megabit
+  Gb      gigabit
+  Tb      terabit
+  Pb      petabit
+  Eb      exabit
+  Zb      zettabit
+  Yb      yottabit
+  B       byte
+  KB      kilobyte
+  MB      megabyte
+  GB      gigabyte
+  TB      terabyte
+  PB      petabyte
+  EB      exabyte
+  ZB      zettabyte
+  YB      yottabyte
+  KiB     kibibyte
+  MiB     mebibyte
+  GiB     gibibyte
+  TiB     tebibyte
+  PiB     pebibyte
+  EiB     exbibyte
+  ZiB     zebibyte
+  YiB     yobibyte
+
+ENERGY:
+  J       joule
+  qJ      quectojoule
+  rJ      rontojoule
+  yJ      yoctojoule
+  zJ      zeptojoule
+  aJ      attojoule
+  fJ      femtojoule
+  pJ      picojoule
+  nJ      nanojoule
+  μJ      microjoule
+  mJ      millijoule
+  cJ      centijoule
+  dJ      decijoule
+  daJ     decajoule
+  hJ      hectojoule
+  kJ      kilojoule
+  MJ      megajoule
+  GJ      gigajoule
+  TJ      terajoule
+  PJ      petajoule
+  EJ      exajoule
+  ZJ      zettajoule
+  YJ      yottajoule
+  RJ      ronnajoule
+  QJ      quettajoule
+  Wh      watthour
+  kWh     kilowatthour
+  MWh     megawatthour
+  GWh     gigawatthour
+  TWh     terawatthour
+  PWh     petawatthour
+  eV      electronvolt
+  cal     calorie
+
+LENGTH:
+  m       meter
+  am      attometer
+  fm      femtometer
+  pm      picometer
+  nm      nanometer
+  µm      micrometer
+  mm      millimeter
+  cm      centimeter
+  dm      decimeter
+  dam     decameter
+  hm      hectometer
+  km      kilometer
+  Mm      megameter
+  Gm      gigameter
+  Tm      terameter
+  Pm      petameter
+  Em      exameter
+  Å       angstrom
+  in      inch
+  ft      foot
+  yd      yard
+  mi      mile
+  nmi     nauticalmile
+  lea     league
+  fur     furlong
+
+MASS:
+  g       gram
+  qg      quectogram
+  rg      rontogram
+  yg      yoctogram
+  zg      zeptogram
+  ag      attogram
+  fg      femtogram
+  pg      picogram
+  ng      nanogram
+  μg      microgram
+  mg      milligram
+  cg      centigram
+  dg      decigram
+  dag     decagram
+  hg      hectogram
+  kg      kilogram
+  Mg      megagram
+  Gg      gigagram
+  Tg      teragram
+  Pg      petagram
+  Eg      exagram
+  Zg      zettagram
+  Yg      yottagram
+  Rg      ronnagram
+  Qg      quettagram
+  gr      grain
+  dr      drachm
+  oz      ounce
+  lb      pound
+  st      stone
+  t       ton
+  ___     slug
+
+POWER:
+  W       watt
+  qW      quectowatt
+  rW      rontowatt
+  yW      yoctowatt
+  zW      zeptowatt
+  aW      attowatt
+  fW      femtowatt
+  pW      picowatt
+  nW      nanowatt
+  μW      microwatt
+  mW      milliwatt
+  cW      centiwatt
+  dW      deciwatt
+  daW     decawatt
+  hW      hectowatt
+  kW      kilowatt
+  MW      megawatt
+  GW      gigawatt
+  TW      terawatt
+  PW      petawatt
+  EW      exawatt
+  ZW      zettawatt
+  YW      yottawatt
+  RW      ronnawatt
+  QW      quettawatt
+
+PRESSURE:
+  Pa      pascal
+  qPa     quectopascal
+  rPa     rontopascal
+  yPa     yoctopascal
+  zPa     zeptopascal
+  aPa     attopascal
+  fPa     femtopascal
+  pPa     picopascal
+  nPa     nanopascal
+  μPa     micropascal
+  mPa     millipascal
+  cPa     centipascal
+  dPa     decipascal
+  daPa    decapascal
+  hPa     hectopascal
+  kPa     kilopascal
+  MPa     megapascal
+  GPa     gigapascal
+  TPa     terapascal
+  PPa     petapascal
+  EPa     exapascal
+  ZPa     zettapascal
+  YPa     yottapascal
+  RPa     ronnapascal
+  QPa     quettapascal
+  mbar    millibar
+  cbar    centibar
+  dbar    decibar
+  bar     bar
+  kbar    kilobar
+  Mbar    megabar
+  Gbar    gigabar
+  at      technicalatmosphere
+  atm     standardatmosphere
+  Ba      barye
+  inH20   inchofwatercolumn
+  mmH20   meterofwatercolumn
+  inHg    inchofmercury
+  mmHg    meterofmercury
+  N/m²    newtonpersquaremeter
+  psi     poundforcepersquareinch
+  Torr    torr
+
+TEMPERATURE:
+  C       celsius
+  F       fahrenheit
+  K       kelvin
+
+TIME:
+  s       second
+  qs      quectosecond
+  rs      rontosecond
+  ys      yoctosecond
+  zs      zeptosecond
+  as      attosecond
+  fs      femtosecond
+  ps      picosecond
+  ns      nanosecond
+  μs      microsecond
+  ms      millisecond
+  cs      centisecond
+  ds      decisecond
+  das     decasecond
+  hs      hectosecond
+  ks      kilosecond
+  Ms      megasecond
+  Gs      gigasecond
+  Ts      terasecond
+  Ps      petasecond
+  Es      exasecond
+  Zs      zettasecond
+  Ys      yottasecond
+  Rs      ronnasecond
+  Qs      quettasecond
+  min     minute
+  hr      hour
+  d       day
+  ___     month
+  yr      year
+  ___     decade
+  ___     century
+  ___     millennium
+  𝑡ₚ      plancktime
+  ___     fortnight
+  ___     score
+
+VOLUME:
+  L       liter
+  qL      quectoliter
+  rL      rontoliter
+  yL      yoctoliter
+  zL      zeptoliter
+  aL      attoliter
+  fL      femtoliter
+  pL      picoliter
+  nL      nanoliter
+  μL      microliter
+  mL      milliliter
+  cL      centiliter
+  dL      deciliter
+  daL     decaliter
+  hL      hectoliter
+  kL      kiloliter
+  ML      megaliter
+  GL      gigaliter
+  TL      teraliter
+  PL      petaliter
+  EL      exaliter
+  ZL      zettaliter
+  YL      yottaliter
+  RL      ronnaliter
+  QL      quettaliter
+  min     minim
+  qt      quart
+  pt      pint
+  gal     gallon
+  floz    fluidounce
+  fldr    usfluiddram
+  tsp     teaspoon
+  tbsp    tablespoon
+  uspt    uspint
+  usqt    usquart
+  pot     uspottle
+  usgal   usgallon
+  usfloz  usfluidounce
+  c       uscup
+  jig     usshot
+  gi      usgill
+  bbl     barrel
+  ___     oilbarrel
+  ___     hogshead
 --------------------------------------------------------------------------------
 Note:
   Symbols are case-sensitive, names are not.
