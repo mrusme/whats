@@ -16,16 +16,6 @@ const task = @import("task.zig");
 
 const VERSION = build_options.version;
 
-const Units =
-    data.Units ++
-    energy.Units ++
-    lengths.Units ++
-    mass.Units ++
-    power.Units ++
-    pressure.Units ++
-    time.Units ++
-    volume.Units;
-
 pub fn main() !void {
     var allocator = std.heap.page_allocator;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -39,6 +29,16 @@ pub fn main() !void {
 
     var graph = conversion.ConversionGraph.init(gpallocator);
     defer graph.deinit();
+
+    const units_static =
+        data.Units ++
+        energy.Units ++
+        lengths.Units ++
+        mass.Units ++
+        power.Units ++
+        pressure.Units ++
+        time.Units ++
+        volume.Units;
 
     try data.load(&graph);
     try energy.load(&graph);
@@ -61,8 +61,8 @@ pub fn main() !void {
         units.deinit(gpallocator);
     }
 
-    try units.ensureTotalCapacity(gpallocator, units.len + Units.len);
-    for (Units) |unit| {
+    try units.ensureTotalCapacity(gpallocator, units.len + units_static.len);
+    for (units_static) |unit| {
         try units.append(gpallocator, unit);
     }
 
@@ -257,7 +257,6 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
     const path = try graph.resolveConversion(&rfUnit, &rtUnit);
     defer graph.allocator.free(path);
     for (path) |conv| {
-        std.log.debug("Conversion: {s} -> {s} using formula: {s}", .{ conv.from.name, conv.to.name, conv.formula });
         tmp = conv.apply(tmp);
         std.log.debug("{d}", .{tmp});
     }

@@ -27,7 +27,6 @@ pub const Conversion = struct {
     from: Unit,
     to: Unit,
     ratio: f64,
-    formula: []const u8,
 
     pub fn apply(self: Conversion, x: f64) f64 {
         return x * self.ratio;
@@ -49,27 +48,19 @@ pub const ConversionGraph = struct {
 
     pub fn deinit(self: *ConversionGraph) void {
         self.tree.deinit();
-        for (self.conversions.items) |item| {
-            self.allocator.free(item.formula);
-        }
         self.conversions.deinit();
     }
 
     pub fn addConversion(self: *ConversionGraph, from: Unit, to: Unit, ratio: f64) !void {
-        const formula_mul = try std.fmt.allocPrint(self.allocator, "x * {}", .{ratio});
-        const formula_div = try std.fmt.allocPrint(self.allocator, "x / {}", .{ratio});
-
         const conv_forward = Conversion{
             .from = from,
             .to = to,
             .ratio = ratio,
-            .formula = formula_mul,
         };
         const conv_reverse = Conversion{
             .from = to,
             .to = from,
             .ratio = 1.0 / ratio,
-            .formula = formula_div,
         };
 
         try self.conversions.append(conv_forward);
