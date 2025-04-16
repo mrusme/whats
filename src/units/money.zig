@@ -10,7 +10,13 @@ pub const known_folders_config = .{
 pub fn load(allocator: std.mem.Allocator, graph: *conversion.ConversionGraph) !std.MultiArrayList(conversion.Unit) {
     var units = std.MultiArrayList(conversion.Unit){};
 
-    const eur = conversion.Unit{ .name = "EUR", .plural = "+s", .symbol = "EUR", .ratio = 1.0, .category = conversion.Category.money };
+    const eur = conversion.Unit{
+        .name = try std.fmt.allocPrint(allocator, "EUR", .{}),
+        .plural = try std.fmt.allocPrint(allocator, "EURs", .{}),
+        .symbol = try std.fmt.allocPrint(allocator, "EUR", .{}),
+        .ratio = 1.0,
+        .category = conversion.Category.money,
+    };
     try units.ensureTotalCapacity(allocator, 1);
     try units.append(allocator, eur);
 

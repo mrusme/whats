@@ -52,7 +52,7 @@ pub fn main() !void {
     var units = try money.load(gpallocator, &graph);
     defer {
         for (units.items(.name), units.items(.symbol), units.items(.plural), units.items(.category)) |name, symbol, plural, category| {
-            if (category == conversion.Category.money and !std.mem.eql(u8, name, "EUR")) {
+            if (category == conversion.Category.money) {
                 if (name.len > 0) gpallocator.free(name);
                 if (symbol.len > 0) gpallocator.free(symbol);
                 if (plural.len > 0) gpallocator.free(plural);
