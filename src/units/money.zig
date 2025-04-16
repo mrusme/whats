@@ -54,7 +54,7 @@ pub fn load(allocator: std.mem.Allocator, graph: *conversion.ConversionGraph) !s
         const plural = try std.fmt.allocPrint(allocator, "{s}s", .{currency});
 
         const unit = conversion.Unit{ .name = name, .plural = plural, .symbol = symbol, .ratio = rate, .category = conversion.Category.money };
-        try graph.addConversion(unit, eur, unit.ratio);
+        try graph.addConversion(eur, unit, unit.ratio);
 
         try units.ensureTotalCapacity(allocator, units.len + 1);
         try units.append(allocator, unit);
