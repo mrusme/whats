@@ -1,8 +1,8 @@
 Output whats.gif
 
-Set FontSize 16
-Set Width 1280
-Set Height 960
+Set FontSize 18
+Set Width 750
+Set Height 422
 Set Padding 20
 Set TypingSpeed 100ms
 
