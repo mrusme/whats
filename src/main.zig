@@ -1,7 +1,6 @@
 const std = @import("std");
 
 const commands = @import("commands.zig");
-const arg = @import("arg.zig");
 const conversion = @import("conversion.zig");
 const data = @import("units/data.zig");
 const energy = @import("units/energy.zig");
@@ -14,6 +13,7 @@ const temperature = @import("units/temperature.zig");
 const time = @import("units/time.zig");
 const volume = @import("units/volume.zig");
 const task = @import("task.zig");
+const token = @import("token.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -66,36 +66,20 @@ pub fn main() !void {
         try units.append(gpallocator, unit);
     }
 
-    var argList = arg.ArgList.init(gpallocator);
-    defer argList.deinit();
-    try argList.parse();
+    var tokens = token.TokenList.init(gpallocator);
+    defer tokens.deinit();
+    try tokens.tokenize(&units);
 
-    var t = task.Task.fromArgList(&argList);
+    var t = task.Task.fromTokens(&tokens);
     const retval = try compute(&t, &graph, &units);
-    // https://github.com/ziglang/zig/issues/20369
-    //     catch |err| switch (err) {
-    //     error.InvalidTaskCommand => {
-    //         try stdout.print("Invalid command\n", .{});
-    //         std.process.exit(1);
-    //     },
-    //     error.InvalidUnit => {
-    //         try stdout.print("Invalid unit\n", .{});
-    //         std.process.exit(1);
-    //     },
-    //     error.InvalidTaskType => {
-    //         try stdout.print("Internal error: invalid task type\n", .{});
-    //         std.process.exit(2);
-    //     },
-    //     else => {
-    //         try stdout.print("Internal error\n", .{});
-    //         std.process.exit(2);
-    //     },
-    // };
     std.process.exit(retval);
 }
 
 fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiArrayList(conversion.Unit)) !u8 {
-    const stdout = std.io.getStdOut().writer();
+    var stdout_buf: [4096]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&stdout_buf);
+    const stdout = &stdout_writer.interface;
+    defer stdout.flush() catch {};
     const fV = t.*.fromValue orelse 0.0;
     const fU = t.*.fromUnit orelse "";
     const op = t.*.operation;
@@ -121,8 +105,8 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
                 return error.InvalidUnit;
             }
 
-            const rfUnit = try getUnit(units, fU);
-            const rtUnit = try getUnit(units, tU);
+            const rfUnit = try conversion.getUnit(units, fU);
+            const rtUnit = try conversion.getUnit(units, tU);
 
             var tmp = fV;
             const path = try graph.resolveConversion(&rfUnit, &rtUnit);
@@ -156,6 +140,26 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
                         try stdout.print("{d}%\n", .{result});
                     }
                 },
+                .Plus => {
+                    result = fV + tV;
+                    try stdout.print("{d}\n", .{result});
+                },
+                .Minus => {
+                    result = fV - tV;
+                    try stdout.print("{d}\n", .{result});
+                },
+                .Times => {
+                    result = fV * tV;
+                    try stdout.print("{d}\n", .{result});
+                },
+                .By => {
+                    result = fV / tV;
+                    try stdout.print("{d}\n", .{result});
+                },
+                .Power => {
+                    result = std.math.pow(f64, fV, tV);
+                    try stdout.print("{d}\n", .{result});
+                },
                 else => {
                     return error.NotImplemented;
                 },
@@ -172,39 +176,4 @@ fn compute(t: *task.Task, graph: *conversion.ConversionGraph, units: *std.MultiA
     }
 
     return 1;
-}
-
-fn getUnit(units: *std.MultiArrayList(conversion.Unit), input: []const u8) !conversion.Unit {
-    if (input.len == 0) {
-        return error.InvalidUnit;
-    }
-
-    const names = units.items(.name);
-    const symbols = units.items(.symbol);
-    const plurals = units.items(.plural);
-
-    for (names, symbols, plurals, 0..) |name, symbol, plural, i| {
-        if (symbol.len > 0 and std.mem.eql(u8, input, symbol)) {
-            return units.get(i);
-        } else if (name.len > 0 and std.ascii.eqlIgnoreCase(input, name)) {
-            return units.get(i);
-        } else if (plural.len > 0) {
-            if (plural[0] == '+' and plural.len > 1 and
-                slicesMatch(input, name, plural[1..]))
-            {
-                return units.get(i);
-            } else if (std.mem.eql(u8, input, plural)) {
-                return units.get(i);
-            }
-        }
-    }
-
-    return error.UnitNotFound;
-}
-
-fn slicesMatch(full: []const u8, a: []const u8, b: []const u8) bool {
-    if (full.len != a.len + b.len) return false;
-
-    return std.mem.eql(u8, full[0..a.len], a) and
-        std.mem.eql(u8, full[a.len..], b);
 }

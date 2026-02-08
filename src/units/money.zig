@@ -1,11 +1,6 @@
 const std = @import("std");
 const xml = @import("xml");
-const kf = @import("known-folders");
 const conversion = @import("../conversion.zig");
-
-pub const known_folders_config = .{
-    .xdg_on_mac = true,
-};
 
 pub fn load(allocator: std.mem.Allocator, graph: *conversion.ConversionGraph) !std.MultiArrayList(conversion.Unit) {
     var units = std.MultiArrayList(conversion.Unit){};
@@ -20,11 +15,11 @@ pub fn load(allocator: std.mem.Allocator, graph: *conversion.ConversionGraph) !s
     try units.ensureTotalCapacity(allocator, 1);
     try units.append(allocator, eur);
 
-    const cache_dir = try kf.getPath(allocator, kf.KnownFolder.cache);
-    const rates_paths = [_][]const u8{ cache_dir.?, "whats-rates.xml" };
+    const cache_dir = try getCacheDir(allocator);
+    const rates_paths = [_][]const u8{ cache_dir, "whats-rates.xml" };
     const rates_file = try std.fs.path.join(allocator, &rates_paths);
     defer {
-        allocator.free(cache_dir.?);
+        allocator.free(cache_dir);
         allocator.free(rates_file);
     }
 
@@ -82,35 +77,37 @@ pub fn fileNeedsRefetch(file_path: []const u8) bool {
 
 pub fn fetchRates(allocator: std.mem.Allocator, file_path: []const u8) !void {
     const url = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml";
-    const alloc = std.heap.page_allocator;
 
-    var client = std.http.Client{ .allocator = allocator };
+    var client: std.http.Client = .{ .allocator = allocator };
     defer client.deinit();
-
-    var response_body = std.ArrayList(u8).init(alloc);
-
-    const response = try client.fetch(.{
-        .method = .GET,
-        .location = .{ .url = url },
-        .response_storage = .{ .dynamic = &response_body },
-    });
-
-    if (response.status != std.http.Status.ok) {
-        return;
-    }
 
     const file = try std.fs.cwd().createFile(file_path, .{ .truncate = true });
     defer file.close();
 
-    try file.writeAll(response_body.items);
+    var buf: [4096]u8 = undefined;
+    var file_writer = file.writer(&buf);
+
+    const response = try client.fetch(.{
+        .method = .GET,
+        .location = .{ .url = url },
+        .response_writer = &file_writer.interface,
+    });
+
+    try file_writer.interface.flush();
+
+    if (response.status != std.http.Status.ok) {
+        return;
+    }
 }
 
 pub fn parseRates(allocator: std.mem.Allocator, file_path: []const u8) !std.StringHashMap(f64) {
     const file = try std.fs.cwd().openFile(file_path, .{});
     defer file.close();
 
-    var doc = xml.streamingDocument(allocator, file.reader());
-    defer doc.deinit();
+    const file_content = try file.readToEndAlloc(allocator, 1024 * 1024);
+    defer allocator.free(file_content);
+
+    var doc = xml.StaticDocument.init(file_content);
     var reader = doc.reader(allocator, .{});
     defer reader.deinit();
 
@@ -155,25 +152,11 @@ pub fn parseRates(allocator: std.mem.Allocator, file_path: []const u8) !std.Stri
     return rates;
 }
 
-// pub fn convertCurrencyToUSDctsWithRates(
-//     rates: std.StringHashMap(f64),
-//     cents: i64,
-//     curr: []const u8,
-// ) !i64 {
-//     const rate = rates.get(curr) orelse return error.CurrencyNotAvailable;
-//     const usd_rate = rates.get("USD") orelse return error.CurrencyNotAvailable;
-//
-//     const usd_cents = std.math.roundToEven(f64(cents) * (usd_rate / rate));
-//     return @intCast(usd_cents);
-// }
-//
-// pub fn convertCurrencyToUSDcts(
-//     allocator: *std.mem.Allocator,
-//     cents: i64,
-//     curr: []const u8,
-// ) !i64 {
-//     const rates = try fetchRates(allocator);
-//     defer rates.deinit();
-//
-//     return try convertCurrencyToUSDctsWithRates(rates, cents, curr);
-// }
+fn getCacheDir(allocator: std.mem.Allocator) ![]const u8 {
+    const xdg = std.posix.getenv("XDG_CACHE_HOME");
+    if (xdg) |dir| {
+        return try allocator.dupe(u8, dir);
+    }
+    const home = std.posix.getenv("HOME") orelse return error.NoCacheDir;
+    return try std.fs.path.join(allocator, &[_][]const u8{ home, ".cache" });
+}

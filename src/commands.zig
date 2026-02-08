@@ -5,7 +5,10 @@ const conversion = @import("conversion.zig");
 const VERSION = build_options.version;
 
 pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
-    const stdout = std.io.getStdOut().writer();
+    var stdout_buf: [4096]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&stdout_buf);
+    const stdout = &stdout_writer.interface;
+    defer stdout.flush() catch {};
 
     try stdout.print("Usage: whats [OPTION]... NUMBER [UNIT] [OPERATOR] [NUMBER] [UNIT]\n", .{});
     try stdout.print("A command for basic convertion and calculation.\n\n", .{});
@@ -45,6 +48,13 @@ pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
     try stdout.print("  to: Conversion or calculation, e.g. 2m to feet, 10 to 20\n", .{});
     try stdout.print("  of: Calculation, e.g. 20% of 100, 20 of 100\n", .{});
     try stdout.print("\n", .{});
+    try stdout.print("Math operators:\n", .{});
+    try stdout.print("  plus, +          Addition, e.g. 1 plus 2, 1 + 2\n", .{});
+    try stdout.print("  minus, -         Subtraction, e.g. 10 minus 6, 10 - 6\n", .{});
+    try stdout.print("  times, x, *      Multiplication, e.g. 3 times 2, 3 x 2\n", .{});
+    try stdout.print("  by, divided, /   Division, e.g. 15 by 3, 15 divided by 3\n", .{});
+    try stdout.print("  power, ^         Exponentiation, e.g. 10 power 4, 10 ^ 4\n", .{});
+    try stdout.print("\n", .{});
     try stdout.print("The operator is optional when units are present:\n", .{});
     try stdout.print("  whats 2 m ft\n", .{});
     try stdout.print("  whats 10% 100\n", .{});
@@ -55,17 +65,23 @@ pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
     try stdout.print("  whats 1.21 gigawatts in watts\n", .{});
     try stdout.print("  whats 8 kg in grams\n", .{});
     try stdout.print("  whats 1024 KiB in MiB\n", .{});
+    try stdout.print("  whats 3 times 2\n", .{});
+    try stdout.print("  whats 10 + 5\n", .{});
+    try stdout.print("  whats 15.4 divided by 2\n", .{});
     try stdout.print("\n", .{});
     try stdout.print("Spaces are optional:\n", .{});
     try stdout.print("  whats 2m ft\n", .{});
     try stdout.print("\n", .{});
 
-    try stdout.print("Report bugs at: https://github.com/mrusme/whats/issues\n", .{});
+    try stdout.print("Report bugs at: https://codeberg.org/mrus/whats/issues\n", .{});
     try stdout.print("Home page: http://xn--gckvb8fzb.com/projects/whats/\n", .{});
 }
 
 pub fn version() !void {
-    const stdout = std.io.getStdOut().writer();
+    var stdout_buf: [4096]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&stdout_buf);
+    const stdout = &stdout_writer.interface;
+    defer stdout.flush() catch {};
 
     try stdout.print("whats version {s}\n", .{VERSION});
 }

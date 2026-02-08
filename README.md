@@ -107,7 +107,7 @@ ENERGY:
   fJ      femtojoule
   pJ      picojoule
   nJ      nanojoule
-  μJ      microjoule
+  μJ     microjoule
   mJ      millijoule
   cJ      centijoule
   dJ      decijoule
@@ -138,7 +138,7 @@ LENGTH:
   fm      femtometer
   pm      picometer
   nm      nanometer
-  µm      micrometer
+  µm     micrometer
   mm      millimeter
   cm      centimeter
   dm      decimeter
@@ -150,7 +150,7 @@ LENGTH:
   Tm      terameter
   Pm      petameter
   Em      exameter
-  Å       angstrom
+  Å      angstrom
   in      inch
   ft      foot
   yd      yard
@@ -169,7 +169,7 @@ MASS:
   fg      femtogram
   pg      picogram
   ng      nanogram
-  μg      microgram
+  μg     microgram
   mg      milligram
   cg      centigram
   dg      decigram
@@ -203,7 +203,7 @@ POWER:
   fW      femtowatt
   pW      picowatt
   nW      nanowatt
-  μW      microwatt
+  μW     microwatt
   mW      milliwatt
   cW      centiwatt
   dW      deciwatt
@@ -230,7 +230,7 @@ PRESSURE:
   fPa     femtopascal
   pPa     picopascal
   nPa     nanopascal
-  μPa     micropascal
+  μPa    micropascal
   mPa     millipascal
   cPa     centipascal
   dPa     decipascal
@@ -260,7 +260,7 @@ PRESSURE:
   mmH20   meterofwatercolumn
   inHg    inchofmercury
   mmHg    meterofmercury
-  N/m²    newtonpersquaremeter
+  N/m²   newtonpersquaremeter
   psi     poundforcepersquareinch
   Torr    torr
 
@@ -279,7 +279,7 @@ TIME:
   fs      femtosecond
   ps      picosecond
   ns      nanosecond
-  μs      microsecond
+  μs     microsecond
   ms      millisecond
   cs      centisecond
   ds      decisecond
@@ -303,7 +303,7 @@ TIME:
   ___     decade
   ___     century
   ___     millennium
-  𝑡ₚ      plancktime
+  𝑡ₚ plancktime
   ___     fortnight
   ___     score
 
@@ -317,7 +317,7 @@ VOLUME:
   fL      femtoliter
   pL      picoliter
   nL      nanoliter
-  μL      microliter
+  μL     microliter
   mL      milliliter
   cL      centiliter
   dL      deciliter
@@ -364,6 +364,13 @@ Operators:
   to: Conversion or calculation, e.g. 2m to feet, 10 to 20
   of: Calculation, e.g. 20% of 100, 20 of 100
 
+Math operators:
+  plus, +          Addition, e.g. 1 plus 2, 1 + 2
+  minus, -         Subtraction, e.g. 10 minus 6, 10 - 6
+  times, x, *      Multiplication, e.g. 3 times 2, 3 x 2
+  by, divided, /   Division, e.g. 15 by 3, 15 divided by 3
+  power, ^         Exponentiation, e.g. 10 power 4, 10 ^ 4
+
 The operator is optional when units are present:
   whats 2 m ft
   whats 10% 100
@@ -373,10 +380,10 @@ Examples:
   whats 1.21 gigawatts in watts
   whats 8 kg in grams
   whats 1024 KiB in MiB
+  whats 3 times 2
+  whats 10 + 5
+  whats 15.4 divided by 2
 
 Spaces are optional:
   whats 2m ft
-
-Report bugs at: https://github.com/mrusme/whats/issues
-Home page: http://xn--gckvb8fzb.com/projects/whats/
 ```

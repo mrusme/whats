@@ -61,13 +61,13 @@ pub const ConversionGraph = struct {
         return ConversionGraph{
             .allocator = allocator,
             .tree = bfstree.BFSTree.init(allocator),
-            .conversions = std.ArrayList(Conversion).init(allocator),
+            .conversions = .{},
         };
     }
 
     pub fn deinit(self: *ConversionGraph) void {
         self.tree.deinit();
-        self.conversions.deinit();
+        self.conversions.deinit(self.allocator);
     }
 
     pub fn addConversion(self: *ConversionGraph, from: Unit, to: Unit, ratio: f64) !void {
@@ -82,8 +82,8 @@ pub const ConversionGraph = struct {
             .ratio = 1.0 / ratio,
         };
 
-        try self.conversions.append(conv_forward);
-        try self.conversions.append(conv_reverse);
+        try self.conversions.append(self.allocator, conv_forward);
+        try self.conversions.append(self.allocator, conv_reverse);
 
         try self.tree.addEdge(bfstree.Edge{ .from = from.name, .to = to.name });
         try self.tree.addEdge(bfstree.Edge{ .from = to.name, .to = from.name });
@@ -91,17 +91,17 @@ pub const ConversionGraph = struct {
 
     pub fn resolveConversion(self: *ConversionGraph, from: *const Unit, to: *const Unit) ![]Conversion {
         const found_path = try self.tree.findPath(from.name, to.name);
-        var result = std.ArrayList(Conversion).init(self.allocator);
+        var result: std.ArrayList(Conversion) = .{};
         if (found_path) |path| {
             defer @constCast(&path).deinit();
 
             for (path.edges.items) |edge| {
                 const conv = try self.lookupConversion(edge.from, edge.to);
-                try result.append(conv);
+                try result.append(self.allocator, conv);
             }
         }
 
-        return result.toOwnedSlice();
+        return result.toOwnedSlice(self.allocator);
     }
 
     fn lookupConversion(self: *ConversionGraph, from_name: []const u8, to_name: []const u8) !Conversion {
@@ -113,3 +113,43 @@ pub const ConversionGraph = struct {
         return error.ConversionNotFound;
     }
 };
+
+pub fn getUnit(units: *std.MultiArrayList(Unit), input: []const u8) !Unit {
+    if (input.len == 0) {
+        return error.InvalidUnit;
+    }
+
+    const names = units.items(.name);
+    const symbols = units.items(.symbol);
+    const plurals = units.items(.plural);
+
+    for (names, symbols, plurals, 0..) |name, symbol, plural, i| {
+        if (symbol.len > 0 and std.mem.eql(u8, input, symbol)) {
+            return units.get(i);
+        } else if (name.len > 0 and std.ascii.eqlIgnoreCase(input, name)) {
+            return units.get(i);
+        } else if (plural.len > 0) {
+            if (plural[0] == '+' and plural.len > 1 and
+                slicesMatch(input, name, plural[1..]))
+            {
+                return units.get(i);
+            } else if (std.mem.eql(u8, input, plural)) {
+                return units.get(i);
+            }
+        }
+    }
+
+    return error.UnitNotFound;
+}
+
+pub fn isKnownUnit(units: *std.MultiArrayList(Unit), input: []const u8) bool {
+    _ = getUnit(units, input) catch return false;
+    return true;
+}
+
+fn slicesMatch(full: []const u8, a: []const u8, b: []const u8) bool {
+    if (full.len != a.len + b.len) return false;
+
+    return std.mem.eql(u8, full[0..a.len], a) and
+        std.mem.eql(u8, full[a.len..], b);
+}

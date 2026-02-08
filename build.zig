@@ -16,37 +16,35 @@ pub fn build(b: *std.Build) !void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe = b.addExecutable(.{
-        .name = "whats",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
     const exe_options = b.addOptions();
 
     const opt_version_string = b.option([]const u8, "version-string", "Override version string");
     const v = if (opt_version_string) |version| version else "0.0.0";
     exe_options.addOption([]const u8, "version", v);
-    exe.root_module.addOptions("build_options", exe_options);
 
     const bfstree = b.dependency("bfstree_zig", .{
         .target = target,
         .optimize = optimize,
     }).module("bfstree");
-    exe.root_module.addImport("bfstree", bfstree);
 
     const xml = b.dependency("xml", .{
         .target = target,
         .optimize = optimize,
     }).module("xml");
-    exe.root_module.addImport("xml", xml);
 
-    const known_folders = b.dependency("known_folders", .{
+    const exe_mod = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
-    }).module("known-folders");
-    exe.root_module.addImport("known-folders", known_folders);
+    });
+    exe_mod.addOptions("build_options", exe_options);
+    exe_mod.addImport("bfstree", bfstree);
+    exe_mod.addImport("xml", xml);
+
+    const exe = b.addExecutable(.{
+        .name = "whats",
+        .root_module = exe_mod,
+    });
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -76,10 +74,17 @@ pub fn build(b: *std.Build) !void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_unit_tests = b.addTest(.{
+    const test_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
+    });
+    test_mod.addOptions("build_options", exe_options);
+    test_mod.addImport("bfstree", bfstree);
+    test_mod.addImport("xml", xml);
+
+    const exe_unit_tests = b.addTest(.{
+        .root_module = test_mod,
     });
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);

@@ -37,16 +37,16 @@
     // internet connectivity.
     .dependencies = .{
         .bfstree_zig = .{
-            .url = "git+https://github.com/mrusme/bfstree.zig/?ref=HEAD#ad70e6d28f9a7ed83f5db793433c72e57df7787b",
-            .hash = "bfstree_zig-0.0.1-72YEj3YpAACHh-jEIvu-XSu63JASEr7RuULt6N9mvQWU",
+            .url = "git+https://github.com/mrusme/bfstree.zig/?ref=HEAD#43caf95cdbe0af62eae9a4d1888d13c73e525426",
+            .hash = "bfstree_zig-0.0.1-72YEjxIaAABwgXjSl-eS8IB1kAAhw5aomfdA6PRvQkju",
         },
         .xml = .{
             .url = "git+https://github.com/ianprime0509/zig-xml/?ref=HEAD#c2b02045810108e7a807855dc592157f44d32fb1",
             .hash = "xml-0.1.0-ZTbP35VkAgAp2cDlvsPuL7SWVZWwPg-V99LmVRSHbCtL",
         },
         .known_folders = .{
-            .url = "git+https://github.com/ziglibs/known-folders.git#aa24df42183ad415d10bc0a33e6238c437fc0f59",
-            .hash = "known_folders-0.0.0-Fy-PJtLDAADGDOwYwMkVydMSTp_aN-nfjCZw6qPQ2ECL",
+            .url = "git+https://github.com/ziglibs/known-folders.git#82027007c0eb199a3242c167a5cffd83b6ee571b",
+            .hash = "known_folders-0.0.0-Fy-PJqHJAAB43zDJmOdlr3nViu69IFI9pNFt7hkHjKk4",
         },
     },
     .paths = .{
