@@ -13,12 +13,12 @@ builds:
     targets:
       - aarch64-linux
       - aarch64-macos
-      - aarch64-windows
+      # - aarch64-windows
       - arm-linux
       - x86_64-linux-gnu
       - x86_64-linux-musl
       - x86_64-macos
-      - x86_64-windows
+      # - x86_64-windows
 
 archives:
   - formats: [tar.gz]
