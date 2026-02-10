@@ -68,6 +68,11 @@ pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
     try stdout.print("  whats 3 times 2\n", .{});
     try stdout.print("  whats 10 + 5\n", .{});
     try stdout.print("  whats 15.4 divided by 2\n", .{});
+    try stdout.print("  whats 100 km per hour in mph\n", .{});
+    try stdout.print("\n", .{});
+    try stdout.print("Compound units can be written as:\n", .{});
+    try stdout.print("  whats 100 km/h in mph\n", .{});
+    try stdout.print("  whats 100 mph in knots\n", .{});
     try stdout.print("\n", .{});
     try stdout.print("Spaces are optional:\n", .{});
     try stdout.print("  whats 2m ft\n", .{});

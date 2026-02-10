@@ -58,7 +58,7 @@ pub const TokenList = struct {
             try self.tokenizeRaw(argStr, units);
         }
 
-        self.normalize();
+        try self.normalize(units);
     }
 
     fn tokenizeRaw(self: *TokenList, raw: []const u8, units: *std.MultiArrayList(conversion.Unit)) !void {
@@ -170,10 +170,13 @@ pub const TokenList = struct {
     }
 
     /// Normalize the token stream.
+    /// - Collapses compound units: [unit, "per"|"/", unit] -> single unit (e.g. "km/h")
     /// - Collapses consecutive operators with the same operation (e.g. "divided by" -> single .By)
-    /// Future extensions:
-    /// - Compound units: [unit("feet"), unknown("per"), unit("second")] -> unit("ft/s")
-    fn normalize(self: *TokenList) void {
+    fn normalize(self: *TokenList, units: *std.MultiArrayList(conversion.Unit)) !void {
+        // Pass 1: Collapse compound units [unit, "per"/operator(.By), unit] -> unit("sym1/sym2")
+        try self.collapseCompoundUnits(units);
+
+        // Pass 2: Collapse consecutive duplicate operators (e.g. "divided by")
         if (self.tokens.items.len <= 1) return;
         var write: usize = 1;
         var read: usize = 1;
@@ -188,6 +191,73 @@ pub const TokenList = struct {
             write += 1;
         }
         self.tokens.shrinkRetainingCapacity(write);
+    }
+
+    /// Detect [unit, separator, unit] where separator is unknown("per") or operator(.By),
+    /// look up component symbols, construct "sym1/sym2", and if that's a known unit,
+    /// collapse the three tokens into one.
+    fn collapseCompoundUnits(self: *TokenList, units: *std.MultiArrayList(conversion.Unit)) !void {
+        if (self.tokens.items.len < 3) return;
+        var i: usize = 0;
+        while (i + 2 < self.tokens.items.len) {
+            const t0 = self.tokens.items[i];
+            const t1 = self.tokens.items[i + 1];
+            const t2 = self.tokens.items[i + 2];
+
+            const is_per = t1.kind == .unknown and std.ascii.eqlIgnoreCase(t1.raw, "per");
+            const is_slash = t1.kind == .operator and t1.operation == .By;
+
+            if (t0.kind == .unit and (is_per or is_slash) and t2.kind == .unit) {
+                // Look up component units to get their symbols
+                const unit1 = conversion.getUnit(units, t0.raw) catch {
+                    i += 1;
+                    continue;
+                };
+                const unit2 = conversion.getUnit(units, t2.raw) catch {
+                    i += 1;
+                    continue;
+                };
+
+                // Construct compound symbol: "sym1/sym2"
+                const compound_len = unit1.symbol.len + 1 + unit2.symbol.len;
+                const compound = self.allocator.alloc(u8, compound_len) catch {
+                    i += 1;
+                    continue;
+                };
+                @memcpy(compound[0..unit1.symbol.len], unit1.symbol);
+                compound[unit1.symbol.len] = '/';
+                @memcpy(compound[unit1.symbol.len + 1 ..], unit2.symbol);
+
+                if (conversion.isKnownUnit(units, compound)) {
+                    // Free old token raws
+                    if (t0.raw.len > 0) self.allocator.free(t0.raw);
+                    if (t1.raw.len > 0) self.allocator.free(t1.raw);
+                    if (t2.raw.len > 0) self.allocator.free(t2.raw);
+
+                    // Replace first token with compound unit
+                    self.tokens.items[i] = Token{
+                        .kind = .unit,
+                        .raw = compound,
+                    };
+
+                    // Remove the two consumed tokens by shifting
+                    const remove_start = i + 1;
+                    const remaining = self.tokens.items.len - remove_start - 2;
+                    std.mem.copyForwards(
+                        Token,
+                        self.tokens.items[remove_start..][0..remaining],
+                        self.tokens.items[remove_start + 2 ..][0..remaining],
+                    );
+                    self.tokens.shrinkRetainingCapacity(self.tokens.items.len - 2);
+                    // Don't increment i — check if there's another compound starting here
+                } else {
+                    self.allocator.free(compound);
+                    i += 1;
+                }
+            } else {
+                i += 1;
+            }
+        }
     }
 
     fn appendToken(self: *TokenList, tok: Token) !void {

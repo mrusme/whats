@@ -11,6 +11,7 @@ const power = @import("units/power.zig");
 const pressure = @import("units/pressure.zig");
 const temperature = @import("units/temperature.zig");
 const time = @import("units/time.zig");
+const velocity = @import("units/velocity.zig");
 const volume = @import("units/volume.zig");
 const task = @import("task.zig");
 const token = @import("token.zig");
@@ -37,6 +38,7 @@ pub fn main() !void {
         pressure.Units ++
         temperature.Units ++
         time.Units ++
+        velocity.Units ++
         volume.Units;
 
     try data.load(&graph);
@@ -47,6 +49,7 @@ pub fn main() !void {
     try pressure.load(&graph);
     try temperature.load(&graph);
     try time.load(&graph);
+    try velocity.load(&graph);
     try volume.load(&graph);
 
     var units = try money.load(gpallocator, &graph);

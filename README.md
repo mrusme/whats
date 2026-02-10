@@ -307,6 +307,13 @@ TIME:
   ___     fortnight
   ___     score
 
+VELOCITY:
+  m/s     meterpersecond
+  km/h    kilometerperhour
+  mph     milesperhour
+  ft/s    footpersecond
+  kn      knot
+
 VOLUME:
   L       liter
   qL      quectoliter
@@ -383,7 +390,15 @@ Examples:
   whats 3 times 2
   whats 10 + 5
   whats 15.4 divided by 2
+  whats 100 km per hour in mph
+
+Compound units can be written as:
+  whats 100 km/h in mph
+  whats 100 mph in knots
 
 Spaces are optional:
   whats 2m ft
+
+Report bugs at: https://codeberg.org/mrus/whats/issues
+Home page: http://xn--gckvb8fzb.com/projects/whats/
 ```

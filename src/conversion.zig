@@ -12,6 +12,7 @@ pub const Category = enum {
     pressure,
     temperature,
     time,
+    velocity,
     volume,
 };
 
