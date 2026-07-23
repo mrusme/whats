@@ -1,6 +1,10 @@
 # whats
 
-[<img src="https://xn--gckvb8fzb.com/images/chatroom.png" width="275">](https://xn--gckvb8fzb.com/contact/)
+[![SEGV 
+LICENSE](https://img.shields.io/static/v1?label=SEGV%20LICENSE&message=1.1&labelColor=0060A8&color=ffffff)](https://xn--gckvb8fzb.com/segv/)
+
+[<img src="https://xn--gckvb8fzb.com/images/chatroom.png"
+width="275">](https://xn--gckvb8fzb.com/contact/)
 
 ![`whats`](.README.md/whats.gif)
 
@@ -399,6 +403,6 @@ Compound units can be written as:
 Spaces are optional:
   whats 2m ft
 
-Report bugs at: https://codeberg.org/mrus/whats/issues
+Report bugs at: https://tty.fail/mrus/whats/issues
 Home page: http://xn--gckvb8fzb.com/projects/whats/
 ```

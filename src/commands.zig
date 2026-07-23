@@ -78,7 +78,7 @@ pub fn help(units: *std.MultiArrayList(conversion.Unit)) !void {
     try stdout.print("  whats 2m ft\n", .{});
     try stdout.print("\n", .{});
 
-    try stdout.print("Report bugs at: https://codeberg.org/mrus/whats/issues\n", .{});
+    try stdout.print("Report bugs at: https://tty.fail/mrus/whats/issues\n", .{});
     try stdout.print("Home page: http://xn--gckvb8fzb.com/projects/whats/\n", .{});
 }
 
