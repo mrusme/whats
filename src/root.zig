@@ -5,6 +5,7 @@ const tokenizer = @import("tokenizer.zig");
 
 const Allocator = std.mem.Allocator;
 
+pub const Parser = @import("Parser.zig");
 pub const Registry = @import("Registry.zig");
 pub const Unit = @import("Unit.zig");
 pub const Category = Unit.Category;
@@ -19,7 +20,7 @@ pub const percent = tokenizer.percent;
 pub const Task = task.Task;
 pub const Result = task.Result;
 
-pub const Error = task.EvaluateError || Allocator.Error || error{Unrecognized};
+pub const Error = task.EvaluateError || Allocator.Error;
 
 pub fn eval(gpa: Allocator, registry: *Registry, input: []const u8) Error!Result {
     const tokens = try tokenizeText(gpa, registry, input);
@@ -34,8 +35,7 @@ pub fn evalArgv(gpa: Allocator, registry: *Registry, argv: []const []const u8) E
 }
 
 fn run(registry: *Registry, tokens: []const Token) Error!Result {
-    const matched = Task.match(tokens) orelse return error.Unrecognized;
-    return matched.evaluate(registry);
+    return Task.match(tokens).evaluate(registry);
 }
 
 test {
@@ -54,7 +54,10 @@ test eval {
     const watts = try eval(std.testing.allocator, &registry, "1.21 gigawatts in watts");
     try std.testing.expectApproxEqRel(@as(f64, 1.21e9), watts.value, 1e-12);
 
-    try std.testing.expectError(error.Unrecognized, eval(std.testing.allocator, &registry, "gibberish"));
+    const nested = try eval(std.testing.allocator, &registry, "(2 + 1) * 3 ^ 2");
+    try std.testing.expectApproxEqAbs(@as(f64, 27), nested.value, 1e-12);
+
+    try std.testing.expectError(error.UnexpectedToken, eval(std.testing.allocator, &registry, "gibberish"));
 }
 
 test evalArgv {

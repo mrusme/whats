@@ -7,7 +7,7 @@ const rule = "-" ** 80;
 
 pub fn usage(writer: *Writer, registry: *const whats.Registry) Writer.Error!void {
     try writer.writeAll(
-        \\Usage: whats [OPTION]... NUMBER [UNIT] [OPERATOR] [NUMBER] [UNIT]
+        \\Usage: whats [OPTION]... EXPRESSION
         \\A command for basic convertion and calculation.
         \\
         \\  -h, --help       display this help and exit
@@ -39,11 +39,11 @@ pub fn usage(writer: *Writer, registry: *const whats.Registry) Writer.Error!void
         \\  of: Calculation, e.g. 20% of 100, 20 of 100
         \\
         \\Math operators:
-        \\  plus, +          Addition, e.g. 1 plus 2, 1 + 2
-        \\  minus, -         Subtraction, e.g. 10 minus 6, 10 - 6
-        \\  times, x, *      Multiplication, e.g. 3 times 2, 3 x 2
-        \\  by, divided, /   Division, e.g. 15 by 3, 15 divided by 3
-        \\  power, ^         Exponentiation, e.g. 10 power 4, 10 ^ 4
+        \\  plus, +            Addition, e.g. 1 plus 2, 1 + 2
+        \\  minus, -           Subtraction, e.g. 10 minus 6, 10 - 6
+        \\  times, x, *, ×     Multiplication, e.g. 3 times 2, 3 multiplied by 2
+        \\  by, divided, /, ÷  Division, e.g. 15 by 3, 15 divided by 3
+        \\  power, ^, **       Exponentiation, e.g. 10 ^ 4, 2 to the power of 10
         \\
         \\The operator is optional when units are present:
         \\  whats 2 m ft
@@ -59,12 +59,30 @@ pub fn usage(writer: *Writer, registry: *const whats.Registry) Writer.Error!void
         \\  whats 15.4 divided by 2
         \\  whats 100 km per hour in mph
         \\
+        \\Multiplication:
+        \\  whats 2 + 2 x 4
+        \\  whats "(2 + 1) x 3"
+        \\
+        \\Quote what the shell would otherwise expand, such as * and parentheses:
+        \\  whats "4 * 3"
+        \\
+        \\Units take part in arithmetic:
+        \\  whats 2 m + 30 cm in ft
+        \\  whats "(1 GB + 500 MB) in MB"
+        \\  whats 100 km/h x 2
+        \\
+        \\A percentage applies to the value on its left:
+        \\  whats 100 + 10%
+        \\  whats 100 - 10%
+        \\  whats 100 x 10%
+        \\
         \\Compound units can be written as:
         \\  whats 100 km/h in mph
         \\  whats 100 mph in knots
         \\
         \\Spaces are optional:
         \\  whats 2m ft
+        \\  whats 1+1
         \\
         \\Numbers may be signed or written in exponent notation:
         \\  whats -5 + 3

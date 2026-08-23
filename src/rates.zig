@@ -160,15 +160,26 @@ pub fn addTo(registry: *Registry, table: Table) Allocator.Error!void {
 
 pub fn mentionsCurrency(registry: *const Registry, argv: []const []const u8) bool {
     for (argv) |argument| {
-        var term = argument;
-        while (term.len > 0 and !std.ascii.isAlphabetic(term[0])) term = term[1..];
-        if (term.len == 4 and (term[3] == 's' or term[3] == 'S')) term = term[0..3];
-        if (term.len != 3) continue;
-        for (term) |c| {
-            if (!std.ascii.isAlphabetic(c)) break;
-        } else if (!registry.contains(term)) return true;
+        var words = std.mem.tokenizeAny(u8, argument, " \t\r\n");
+        while (words.next()) |word| {
+            if (isUnknownCode(registry, word)) return true;
+        }
     }
     return false;
+}
+
+fn isUnknownCode(registry: *const Registry, word: []const u8) bool {
+    var term = word;
+    while (term.len > 0 and !std.ascii.isAlphabetic(term[0])) term = term[1..];
+    while (term.len > 0 and !std.ascii.isAlphabetic(term[term.len - 1])) term = term[0 .. term.len - 1];
+
+    if (term.len == 4 and (term[3] == 's' or term[3] == 'S')) term = term[0..3];
+    if (term.len != 3) return false;
+
+    for (term) |c| {
+        if (!std.ascii.isAlphabetic(c)) return false;
+    }
+    return !registry.contains(term);
 }
 
 pub fn joinPath(buffer: []u8, parts: []const []const u8) ?[]const u8 {
@@ -252,4 +263,6 @@ test mentionsCurrency {
     try testing.expect(!mentionsCurrency(&registry, &.{ "2", "m", "in", "ft" }));
     try testing.expect(!mentionsCurrency(&registry, &.{ "1024", "KiB", "in", "MiB" }));
     try testing.expect(!mentionsCurrency(&registry, &.{ "10", "+", "5" }));
+    try testing.expect(mentionsCurrency(&registry, &.{"(100 USD + 50 USD) in EUR"}));
+    try testing.expect(!mentionsCurrency(&registry, &.{"(2 m + 30 cm) in ft"}));
 }

@@ -29,6 +29,8 @@ pub const Token = struct {
         number,
         unit,
         operator,
+        paren_open,
+        paren_close,
         command,
         unknown,
     };
@@ -39,6 +41,8 @@ pub const Token = struct {
 };
 
 const List = std.ArrayList(Token);
+
+const Position = enum { standalone, attached };
 
 pub fn tokenize(gpa: Allocator, registry: *const Registry, argv: []const []const u8) Allocator.Error![]Token {
     var tokens: List = .empty;
@@ -53,92 +57,149 @@ pub fn tokenizeText(gpa: Allocator, registry: *const Registry, text: []const u8)
     var tokens: List = .empty;
     defer tokens.deinit(gpa);
 
-    var words = std.mem.tokenizeAny(u8, text, " \t\r\n");
-    while (words.next()) |word| try scan(gpa, registry, &tokens, word);
+    try scan(gpa, registry, &tokens, text);
 
     return finish(gpa, registry, &tokens);
 }
 
 fn finish(gpa: Allocator, registry: *const Registry, tokens: *List) Allocator.Error![]Token {
+    foldPhrases(tokens);
     try collapseCompounds(registry, tokens);
-    collapseOperators(tokens);
     return tokens.toOwnedSlice(gpa);
 }
 
 fn scan(gpa: Allocator, registry: *const Registry, tokens: *List, argument: []const u8) Allocator.Error!void {
-    if (argument.len == 0) return;
+    var words = std.mem.tokenizeAny(u8, argument, " \t\r\n");
+    while (words.next()) |word| try scanWord(gpa, registry, tokens, word);
+}
 
-    if (isCommand(argument)) {
-        try tokens.append(gpa, .{ .kind = .command, .text = argument });
+fn scanWord(gpa: Allocator, registry: *const Registry, tokens: *List, word: []const u8) Allocator.Error!void {
+    if (isCommand(word)) {
+        try tokens.append(gpa, .{ .kind = .command, .text = word });
         return;
     }
 
-    if (classify(registry, argument)) |token| {
+    if (classify(registry, word, .standalone)) |token| {
         try tokens.append(gpa, token);
         return;
     }
 
-    const number = scanNumber(argument, signAllowed(tokens.items)) orelse {
-        try tokens.append(gpa, .{ .kind = .unknown, .text = argument });
-        return;
+    var i: usize = 0;
+    var position: Position = .standalone;
+
+    while (i < word.len) {
+        const rest = word[i..];
+
+        if (rest[0] == '(' or rest[0] == ')') {
+            try tokens.append(gpa, .{
+                .kind = if (rest[0] == '(') .paren_open else .paren_close,
+                .text = rest[0..1],
+            });
+            i += 1;
+            position = .standalone;
+            continue;
+        }
+
+        if (symbolOperator(rest)) |symbol| {
+            try tokens.append(gpa, .{
+                .kind = .operator,
+                .text = rest[0..symbol.len],
+                .operation = symbol.operation,
+            });
+            i += symbol.len;
+            position = .standalone;
+            continue;
+        }
+
+        if (std.mem.startsWith(u8, rest, percent)) {
+            try tokens.append(gpa, .{ .kind = .unit, .text = percent });
+            i += percent.len;
+            position = .attached;
+            continue;
+        }
+
+        if (numberEnd(word, i)) |end| {
+            const value = std.fmt.parseFloat(f64, word[i..end]) catch break;
+            try tokens.append(gpa, .{ .kind = .number, .text = word[i..end], .value = value });
+            i = end;
+            position = .attached;
+            continue;
+        }
+
+        const end = termEnd(registry, word, i) orelse break;
+        const term = word[i..end];
+        const token = classify(registry, term, position) orelse
+            Token{ .kind = .unknown, .text = term };
+
+        try tokens.append(gpa, token);
+        i = end;
+        position = if (token.kind == .unit) .attached else .standalone;
+    }
+
+    if (i < word.len) try tokens.append(gpa, .{ .kind = .unknown, .text = word[i..] });
+}
+
+fn classify(registry: *const Registry, term: []const u8, position: Position) ?Token {
+    if (std.mem.eql(u8, term, percent)) return .{ .kind = .unit, .text = percent };
+    if (position == .standalone) {
+        if (operationOf(term)) |operation| {
+            return .{ .kind = .operator, .text = term, .operation = operation };
+        }
+    }
+    if (registry.find(term)) |unit| return .{ .kind = .unit, .text = term, .unit = unit };
+    return null;
+}
+
+const Symbol = struct { len: usize, operation: Operation };
+
+fn symbolOperator(text: []const u8) ?Symbol {
+    if (std.mem.startsWith(u8, text, "**")) return .{ .len = 2, .operation = .pow };
+    if (std.mem.startsWith(u8, text, "\u{00d7}")) return .{ .len = 2, .operation = .mul };
+    if (std.mem.startsWith(u8, text, "\u{00f7}")) return .{ .len = 2, .operation = .div };
+
+    return switch (text[0]) {
+        '+' => .{ .len = 1, .operation = .add },
+        '-' => .{ .len = 1, .operation = .sub },
+        '*' => .{ .len = 1, .operation = .mul },
+        '/' => .{ .len = 1, .operation = .div },
+        '^' => .{ .len = 1, .operation = .pow },
+        else => null,
     };
+}
 
-    if (number.start > 0) {
-        try tokens.append(gpa, attachedTerm(registry, argument[0..number.start]));
+fn termEnd(registry: *const Registry, word: []const u8, start: usize) ?usize {
+    const end = termByteEnd(word, start);
+    if (end == start) return null;
+
+    if (end < word.len and word[end] == '/') {
+        const tail = termByteEnd(word, end + 1);
+        if (tail > end + 1 and registry.contains(word[start..tail])) return tail;
     }
-
-    try tokens.append(gpa, .{
-        .kind = .number,
-        .text = argument[number.start..number.end],
-        .value = number.value,
-    });
-
-    if (number.end < argument.len) {
-        try tokens.append(gpa, attachedTerm(registry, argument[number.end..]));
-    }
+    return end;
 }
 
-fn classify(registry: *const Registry, term: []const u8) ?Token {
-    if (std.mem.eql(u8, term, percent)) return .{ .kind = .unit, .text = percent };
-    if (operationOf(term)) |operation| return .{ .kind = .operator, .text = term, .operation = operation };
-    if (registry.find(term)) |unit| return .{ .kind = .unit, .text = term, .unit = unit };
-    return null;
-}
-
-fn attachedTerm(registry: *const Registry, term: []const u8) Token {
-    if (std.mem.eql(u8, term, percent)) return .{ .kind = .unit, .text = percent };
-    if (registry.find(term)) |unit| return .{ .kind = .unit, .text = term, .unit = unit };
-    return .{ .kind = .unknown, .text = term };
-}
-
-const Number = struct {
-    value: f64,
-    start: usize,
-    end: usize,
-};
-
-fn scanNumber(text: []const u8, signed: bool) ?Number {
-    var start: usize = 0;
-    while (start < text.len) : (start += 1) {
-        const end = numberEnd(text, start, signed and start == 0) orelse continue;
-        const value = std.fmt.parseFloat(f64, text[start..end]) catch continue;
-        return .{ .value = value, .start = start, .end = end };
-    }
-    return null;
-}
-
-fn numberEnd(text: []const u8, start: usize, signed: bool) ?usize {
+fn termByteEnd(word: []const u8, start: usize) usize {
     var i = start;
-    if (signed and i < text.len and (text[i] == '-' or text[i] == '+')) i += 1;
+    while (i < word.len and isTermByte(word[i])) : (i += 1) {
+        if (word[i] >= 0x80 and symbolOperator(word[i..]) != null) break;
+    }
+    return i;
+}
 
-    const digits_start = i;
+fn isTermByte(c: u8) bool {
+    return std.ascii.isAlphanumeric(c) or c >= 0x80;
+}
+
+fn numberEnd(text: []const u8, start: usize) ?usize {
+    var i = start;
+
     while (i < text.len and std.ascii.isDigit(text[i])) i += 1;
 
     if (i < text.len and text[i] == '.') {
         i += 1;
         while (i < text.len and std.ascii.isDigit(text[i])) i += 1;
     }
-    if (i == digits_start or (i == digits_start + 1 and text[digits_start] == '.')) return null;
+    if (i == start or (i == start + 1 and text[start] == '.')) return null;
 
     if (i < text.len and (text[i] == 'e' or text[i] == 'E')) {
         var j = i + 1;
@@ -151,13 +212,36 @@ fn numberEnd(text: []const u8, start: usize, signed: bool) ?usize {
     return i;
 }
 
-fn signAllowed(tokens: []const Token) bool {
-    const previous = tokens.len;
-    if (previous == 0) return true;
-    return switch (tokens[previous - 1].kind) {
-        .number, .unit => false,
-        .operator, .command, .unknown => true,
-    };
+const phrases = .{
+    .{ &[_][]const u8{ "raised", "to", "the", "power", "of" }, Operation.pow },
+    .{ &[_][]const u8{ "to", "the", "power", "of" }, Operation.pow },
+    .{ &[_][]const u8{ "divided", "by" }, Operation.div },
+    .{ &[_][]const u8{ "multiplied", "by" }, Operation.mul },
+};
+
+fn foldPhrases(tokens: *List) void {
+    var i: usize = 0;
+    next: while (i < tokens.items.len) : (i += 1) {
+        inline for (phrases) |phrase| {
+            if (startsWithWords(tokens.items[i..], phrase[0])) {
+                tokens.items[i] = .{
+                    .kind = .operator,
+                    .text = phrase[0][0],
+                    .operation = phrase[1],
+                };
+                tokens.replaceRangeAssumeCapacity(i + 1, phrase[0].len - 1, &.{});
+                continue :next;
+            }
+        }
+    }
+}
+
+fn startsWithWords(tokens: []const Token, words: []const []const u8) bool {
+    if (tokens.len < words.len) return false;
+    for (tokens[0..words.len], words) |token, word| {
+        if (!std.ascii.eqlIgnoreCase(token.text, word)) return false;
+    }
+    return true;
 }
 
 fn collapseCompounds(registry: *const Registry, tokens: *List) Allocator.Error!void {
@@ -230,22 +314,6 @@ fn spellings(unit: Unit, buffer: *[max_spellings][]const u8) [][]const u8 {
     return buffer[0..len];
 }
 
-fn collapseOperators(tokens: *List) void {
-    if (tokens.items.len <= 1) return;
-
-    var write: usize = 1;
-    var read: usize = 1;
-    while (read < tokens.items.len) : (read += 1) {
-        const current = tokens.items[read];
-        const previous = tokens.items[write - 1];
-        if (current.kind == .operator and previous.kind == .operator and
-            current.operation == previous.operation) continue;
-        tokens.items[write] = current;
-        write += 1;
-    }
-    tokens.shrinkRetainingCapacity(write);
-}
-
 fn isCommand(text: []const u8) bool {
     if (text.len < 2 or text[0] != '-') return false;
     for (text) |c| {
@@ -274,6 +342,7 @@ fn operationOf(text: []const u8) ?Operation {
         .{ "times", Operation.mul },
         .{ "by", Operation.div },
         .{ "divided", Operation.div },
+        .{ "multiplied", Operation.mul },
         .{ "power", Operation.pow },
     };
 
@@ -325,6 +394,7 @@ test "compound units collapse" {
     for ([_][]const []const u8{
         &.{ "100", "km", "per", "hour", "in", "mph" },
         &.{ "100", "km/h", "in", "mph" },
+        &.{ "100km/h", "in", "mph" },
     }) |argv| {
         const tokens = try tokenize(testing.allocator, &registry, argv);
         defer testing.allocator.free(tokens);
@@ -334,8 +404,18 @@ test "compound units collapse" {
     }
 }
 
-test "consecutive equal operators collapse" {
+test "operator phrases fold into one operator" {
     try expectTokens(&.{ "15.4", "divided", "by", "2" }, &.{ .number, .operator, .number });
+    try expectTokens(&.{ "3", "multiplied", "by", "4" }, &.{ .number, .operator, .number });
+
+    var registry: Registry = try .init(testing.allocator, .{});
+    defer registry.deinit();
+
+    const tokens = try tokenize(testing.allocator, &registry, &.{ "2", "to", "the", "power", "of", "10" });
+    defer testing.allocator.free(tokens);
+
+    try testing.expectEqual(@as(usize, 3), tokens.len);
+    try testing.expectEqual(Operation.pow, tokens[1].operation.?);
 }
 
 test "flags are commands" {
@@ -343,40 +423,52 @@ test "flags are commands" {
     try expectTokens(&.{"-v"}, &.{.command});
 }
 
-test "negative numbers" {
+test "a leading sign is an operator" {
     var registry: Registry = try .init(testing.allocator, .{});
     defer registry.deinit();
 
     const tokens = try tokenize(testing.allocator, &registry, &.{ "-5", "+", "3" });
     defer testing.allocator.free(tokens);
 
-    try testing.expectEqual(@as(usize, 3), tokens.len);
-    try testing.expectEqual(@as(f64, -5), tokens[0].value);
-    try testing.expectEqual(Operation.add, tokens[1].operation.?);
-    try testing.expectEqual(@as(f64, 3), tokens[2].value);
+    try testing.expectEqual(@as(usize, 4), tokens.len);
+    try testing.expectEqual(Operation.sub, tokens[0].operation.?);
+    try testing.expectEqual(@as(f64, 5), tokens[1].value);
+    try testing.expectEqual(Operation.add, tokens[2].operation.?);
+    try testing.expectEqual(@as(f64, 3), tokens[3].value);
 }
 
 test "minus after a number stays an operator" {
-    var registry: Registry = try .init(testing.allocator, .{});
-    defer registry.deinit();
-
-    const tokens = try tokenize(testing.allocator, &registry, &.{ "10", "-", "5" });
-    defer testing.allocator.free(tokens);
-
-    try testing.expectEqual(@as(usize, 3), tokens.len);
-    try testing.expectEqual(Operation.sub, tokens[1].operation.?);
-    try testing.expectEqual(@as(f64, 5), tokens[2].value);
+    try expectTokens(&.{ "10", "-", "5" }, &.{ .number, .operator, .number });
+    try expectTokens(&.{ "10", "-", "-5" }, &.{ .number, .operator, .operator, .number });
 }
 
-test "negative right operand" {
-    var registry: Registry = try .init(testing.allocator, .{});
-    defer registry.deinit();
+test "arithmetic without spaces" {
+    try expectTokens(&.{"1+1"}, &.{ .number, .operator, .number });
+    try expectTokens(&.{"2-1"}, &.{ .number, .operator, .number });
+    try expectTokens(&.{"4/2"}, &.{ .number, .operator, .number });
+    try expectTokens(&.{"4*3"}, &.{ .number, .operator, .number });
+    try expectTokens(&.{"2^4"}, &.{ .number, .operator, .number });
+    try expectTokens(&.{"2**4"}, &.{ .number, .operator, .number });
+    try expectTokens(&.{"2\u{00d7}4"}, &.{ .number, .operator, .number });
+}
 
-    const tokens = try tokenize(testing.allocator, &registry, &.{ "10", "-", "-5" });
-    defer testing.allocator.free(tokens);
-
-    try testing.expectEqual(@as(usize, 3), tokens.len);
-    try testing.expectEqual(@as(f64, -5), tokens[2].value);
+test "parentheses" {
+    try expectTokens(&.{"(2+1)*3"}, &.{
+        .paren_open,
+        .number,
+        .operator,
+        .number,
+        .paren_close,
+        .operator,
+        .number,
+    });
+    try expectTokens(&.{ "(", "2", "+", "1", ")" }, &.{
+        .paren_open,
+        .number,
+        .operator,
+        .number,
+        .paren_close,
+    });
 }
 
 test "exponent notation" {
@@ -415,6 +507,21 @@ test "symbols containing digits are not split" {
     }
 }
 
+test "a slash joins a unit only when the pair resolves" {
+    var registry: Registry = try .init(testing.allocator, .{});
+    defer registry.deinit();
+
+    const joined = try tokenize(testing.allocator, &registry, &.{"1N/m\u{b2}"});
+    defer testing.allocator.free(joined);
+    try testing.expectEqual(@as(usize, 2), joined.len);
+    try testing.expectEqualStrings("N/m\u{b2}", registry.at(joined[1].unit.?).symbol);
+
+    const divided = try tokenize(testing.allocator, &registry, &.{"6m/2"});
+    defer testing.allocator.free(divided);
+    try testing.expectEqual(@as(usize, 4), divided.len);
+    try testing.expectEqual(Operation.div, divided[2].operation.?);
+}
+
 test "leading decimal point" {
     var registry: Registry = try .init(testing.allocator, .{});
     defer registry.deinit();
@@ -441,14 +548,20 @@ test "text input matches argv input" {
     var registry: Registry = try .init(testing.allocator, .{});
     defer registry.deinit();
 
-    const from_text = try tokenizeText(testing.allocator, &registry, "  2 meters   in feet ");
-    defer testing.allocator.free(from_text);
-    const from_argv = try tokenize(testing.allocator, &registry, &.{ "2", "meters", "in", "feet" });
-    defer testing.allocator.free(from_argv);
+    for ([_]struct { text: []const u8, argv: []const []const u8 }{
+        .{ .text = "  2 meters   in feet ", .argv = &.{ "2", "meters", "in", "feet" } },
+        .{ .text = "(2 + 1) * 3", .argv = &.{"(2+1)*3"} },
+    }) |case| {
+        const from_text = try tokenizeText(testing.allocator, &registry, case.text);
+        defer testing.allocator.free(from_text);
+        const from_argv = try tokenize(testing.allocator, &registry, case.argv);
+        defer testing.allocator.free(from_argv);
 
-    try testing.expectEqual(from_argv.len, from_text.len);
-    for (from_argv, from_text) |a, b| {
-        try testing.expectEqual(a.kind, b.kind);
-        try testing.expectEqual(a.unit, b.unit);
+        try testing.expectEqual(from_argv.len, from_text.len);
+        for (from_argv, from_text) |a, b| {
+            try testing.expectEqual(a.kind, b.kind);
+            try testing.expectEqual(a.unit, b.unit);
+            try testing.expectEqual(a.operation, b.operation);
+        }
     }
 }

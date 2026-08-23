@@ -33,10 +33,7 @@ pub fn main(init: std.process.Init) !u8 {
     const tokens = try whats.tokenize(gpa, &registry, argv);
     defer gpa.free(tokens);
 
-    const task = whats.Task.match(tokens) orelse {
-        fail(io, "unrecognized input", .{});
-        return exit_failure;
-    };
+    const task = whats.Task.match(tokens);
 
     switch (task) {
         .empty => {
@@ -55,12 +52,19 @@ pub fn main(init: std.process.Init) !u8 {
             fail(io, "unrecognized option '{s}'", .{flag});
             return exit_failure;
         },
-        else => {
+        .query => {
             const result = task.evaluate(&registry) catch |err| {
                 switch (err) {
                     error.IncompatibleUnits => fail(io, "cannot convert between those units", .{}),
                     error.UnknownUnit => fail(io, "unknown unit", .{}),
                     error.UnsupportedTask => fail(io, "unsupported operation", .{}),
+                    error.UnexpectedToken => fail(io, "unrecognized input", .{}),
+                    error.UnexpectedEnd => fail(io, "incomplete expression", .{}),
+                    error.UnbalancedParenthesis => fail(io, "unbalanced parentheses", .{}),
+                    error.ExpressionTooDeep => fail(io, "expression nested too deeply", .{}),
+                    error.UnitMismatch => fail(io, "cannot mix a plain number with a unit", .{}),
+                    error.UnitNotAllowed => fail(io, "that operation cannot take a unit", .{}),
+                    error.PercentNotAllowed => fail(io, "percent cannot be used there", .{}),
                     error.OutOfMemory => return err,
                 }
                 return exit_failure;
