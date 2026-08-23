@@ -42,36 +42,35 @@ Units:
 --------------------------------------------------------------------------------
 MONEY:
   EUR     EUR
-  RON     RON
-  PLN     PLN
   USD     USD
-  ILS     ILS
-  KRW     KRW
-  MYR     MYR
-  MXN     MXN
-  NOK     NOK
   JPY     JPY
-  ISK     ISK
-  SGD     SGD
-  BGN     BGN
-  DKK     DKK
-  TRY     TRY
-  ZAR     ZAR
   CZK     CZK
-  CNY     CNY
-  BRL     BRL
-  PHP     PHP
-  NZD     NZD
-  HKD     HKD
-  INR     INR
-  AUD     AUD
-  IDR     IDR
+  DKK     DKK
   GBP     GBP
-  SEK     SEK
-  THB     THB
-  CHF     CHF
-  CAD     CAD
   HUF     HUF
+  PLN     PLN
+  RON     RON
+  SEK     SEK
+  CHF     CHF
+  ISK     ISK
+  NOK     NOK
+  TRY     TRY
+  AUD     AUD
+  BRL     BRL
+  CAD     CAD
+  CNY     CNY
+  HKD     HKD
+  IDR     IDR
+  ILS     ILS
+  INR     INR
+  KRW     KRW
+  MXN     MXN
+  MYR     MYR
+  NZD     NZD
+  PHP     PHP
+  SGD     SGD
+  THB     THB
+  ZAR     ZAR
 
 DATA:
   b       bit
@@ -111,7 +110,7 @@ ENERGY:
   fJ      femtojoule
   pJ      picojoule
   nJ      nanojoule
-  μJ     microjoule
+  µJ     microjoule
   mJ      millijoule
   cJ      centijoule
   dJ      decijoule
@@ -173,7 +172,7 @@ MASS:
   fg      femtogram
   pg      picogram
   ng      nanogram
-  μg     microgram
+  µg     microgram
   mg      milligram
   cg      centigram
   dg      decigram
@@ -195,7 +194,7 @@ MASS:
   lb      pound
   st      stone
   t       ton
-  ___     slug
+          slug
 
 POWER:
   W       watt
@@ -207,7 +206,7 @@ POWER:
   fW      femtowatt
   pW      picowatt
   nW      nanowatt
-  μW     microwatt
+  µW     microwatt
   mW      milliwatt
   cW      centiwatt
   dW      deciwatt
@@ -234,7 +233,7 @@ PRESSURE:
   fPa     femtopascal
   pPa     picopascal
   nPa     nanopascal
-  μPa    micropascal
+  µPa    micropascal
   mPa     millipascal
   cPa     centipascal
   dPa     decipascal
@@ -260,10 +259,10 @@ PRESSURE:
   at      technicalatmosphere
   atm     standardatmosphere
   Ba      barye
-  inH20   inchofwatercolumn
-  mmH20   meterofwatercolumn
+  inH2O   inchofwatercolumn
+  mH2O    meterofwatercolumn
   inHg    inchofmercury
-  mmHg    meterofmercury
+  mmHg    millimeterofmercury
   N/m²   newtonpersquaremeter
   psi     poundforcepersquareinch
   Torr    torr
@@ -283,7 +282,7 @@ TIME:
   fs      femtosecond
   ps      picosecond
   ns      nanosecond
-  μs     microsecond
+  µs     microsecond
   ms      millisecond
   cs      centisecond
   ds      decisecond
@@ -302,14 +301,14 @@ TIME:
   min     minute
   hr      hour
   d       day
-  ___     month
+          month
   yr      year
-  ___     decade
-  ___     century
-  ___     millennium
+          decade
+          century
+          millennium
   𝑡ₚ plancktime
-  ___     fortnight
-  ___     score
+          fortnight
+          score
 
 VELOCITY:
   m/s     meterpersecond
@@ -328,7 +327,7 @@ VOLUME:
   fL      femtoliter
   pL      picoliter
   nL      nanoliter
-  μL     microliter
+  µL     microliter
   mL      milliliter
   cL      centiliter
   dL      deciliter
@@ -344,7 +343,7 @@ VOLUME:
   YL      yottaliter
   RL      ronnaliter
   QL      quettaliter
-  min     minim
+          minim
   qt      quart
   pt      pint
   gal     gallon
@@ -361,8 +360,8 @@ VOLUME:
   jig     usshot
   gi      usgill
   bbl     barrel
-  ___     oilbarrel
-  ___     hogshead
+          oilbarrel
+          hogshead
 
 CALCULATION:
   %       percent
@@ -402,6 +401,10 @@ Compound units can be written as:
 
 Spaces are optional:
   whats 2m ft
+
+Numbers may be signed or written in exponent notation:
+  whats -5 + 3
+  whats 1.5e-4 m in mm
 
 Report bugs at: https://tty.fail/mrus/whats/issues
 Home page: http://xn--gckvb8fzb.com/projects/whats/

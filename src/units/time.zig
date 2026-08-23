@@ -1,52 +1,43 @@
-const std = @import("std");
-const conversion = @import("../conversion.zig");
+const Unit = @import("../Unit.zig");
 
-pub const Units = [_]conversion.Unit{
-    conversion.Unit{ .name = "second", .plural = "+s", .symbol = "s", .ratio = 1.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "quectosecond", .plural = "+s", .symbol = "qs", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "rontosecond", .plural = "+s", .symbol = "rs", .ratio = 0.000000000000000000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "yoctosecond", .plural = "+s", .symbol = "ys", .ratio = 0.000000000000000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "zeptosecond", .plural = "+s", .symbol = "zs", .ratio = 0.000000000000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "attosecond", .plural = "+s", .symbol = "as", .ratio = 0.000000000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "femtosecond", .plural = "+s", .symbol = "fs", .ratio = 0.000000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "picosecond", .plural = "+s", .symbol = "ps", .ratio = 0.000000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "nanosecond", .plural = "+s", .symbol = "ns", .ratio = 0.000000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "microsecond", .plural = "+s", .symbol = "μs", .ratio = 0.000001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "millisecond", .plural = "+s", .symbol = "ms", .ratio = 0.001, .category = conversion.Category.time },
-    conversion.Unit{ .name = "centisecond", .plural = "+s", .symbol = "cs", .ratio = 0.01, .category = conversion.Category.time },
-    conversion.Unit{ .name = "decisecond", .plural = "+s", .symbol = "ds", .ratio = 0.1, .category = conversion.Category.time },
-    conversion.Unit{ .name = "decasecond", .plural = "+s", .symbol = "das", .ratio = 10.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "hectosecond", .plural = "+s", .symbol = "hs", .ratio = 100.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "kilosecond", .plural = "+s", .symbol = "ks", .ratio = 1000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "megasecond", .plural = "+s", .symbol = "Ms", .ratio = 1000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "gigasecond", .plural = "+s", .symbol = "Gs", .ratio = 1000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "terasecond", .plural = "+s", .symbol = "Ts", .ratio = 1000000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "petasecond", .plural = "+s", .symbol = "Ps", .ratio = 1000000000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "exasecond", .plural = "+s", .symbol = "Es", .ratio = 1000000000000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "zettasecond", .plural = "+s", .symbol = "Zs", .ratio = 1000000000000000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "yottasecond", .plural = "+s", .symbol = "Ys", .ratio = 1000000000000000000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "ronnasecond", .plural = "+s", .symbol = "Rs", .ratio = 1000000000000000000000000000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "quettasecond", .plural = "+s", .symbol = "Qs", .ratio = 1000000000000000000000000000000.0, .category = conversion.Category.time },
+pub const units = Unit.table(.time, &.{
+    .{ .name = "second", .symbol = "s" },
+    .{ .name = "quectosecond", .symbol = "qs", .scale = 1e-30 },
+    .{ .name = "rontosecond", .symbol = "rs", .scale = 1e-27 },
+    .{ .name = "yoctosecond", .symbol = "ys", .scale = 1e-24 },
+    .{ .name = "zeptosecond", .symbol = "zs", .scale = 1e-21 },
+    .{ .name = "attosecond", .symbol = "as", .scale = 1e-18 },
+    .{ .name = "femtosecond", .symbol = "fs", .scale = 1e-15 },
+    .{ .name = "picosecond", .symbol = "ps", .scale = 1e-12 },
+    .{ .name = "nanosecond", .symbol = "ns", .scale = 1e-9 },
+    .{ .name = "microsecond", .symbol = "µs", .scale = 1e-6 },
+    .{ .name = "millisecond", .symbol = "ms", .scale = 0.001 },
+    .{ .name = "centisecond", .symbol = "cs", .scale = 0.01 },
+    .{ .name = "decisecond", .symbol = "ds", .scale = 0.1 },
+    .{ .name = "decasecond", .symbol = "das", .scale = 10.0 },
+    .{ .name = "hectosecond", .symbol = "hs", .scale = 100.0 },
+    .{ .name = "kilosecond", .symbol = "ks", .scale = 1000.0 },
+    .{ .name = "megasecond", .symbol = "Ms", .scale = 1e6 },
+    .{ .name = "gigasecond", .symbol = "Gs", .scale = 1e9 },
+    .{ .name = "terasecond", .symbol = "Ts", .scale = 1e12 },
+    .{ .name = "petasecond", .symbol = "Ps", .scale = 1e15 },
+    .{ .name = "exasecond", .symbol = "Es", .scale = 1e18 },
+    .{ .name = "zettasecond", .symbol = "Zs", .scale = 1e21 },
+    .{ .name = "yottasecond", .symbol = "Ys", .scale = 1e24 },
+    .{ .name = "ronnasecond", .symbol = "Rs", .scale = 1e27 },
+    .{ .name = "quettasecond", .symbol = "Qs", .scale = 1e30 },
 
-    conversion.Unit{ .name = "minute", .plural = "+s", .symbol = "min", .ratio = 60.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "hour", .plural = "+s", .symbol = "hr", .ratio = 3600.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "day", .plural = "+s", .symbol = "d", .ratio = 86400.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "month", .plural = "+s", .symbol = "___", .ratio = 2629800.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "year", .plural = "+s", .symbol = "yr", .ratio = 31557600.0, .category = conversion.Category.time },
+    .{ .name = "minute", .symbol = "min", .scale = 60.0 },
+    .{ .name = "hour", .symbol = "hr", .aliases = &.{"h"}, .scale = 3600.0 },
+    .{ .name = "day", .symbol = "d", .scale = 86400.0 },
+    .{ .name = "month", .scale = 2629800.0 },
+    .{ .name = "year", .symbol = "yr", .scale = 31557600.0 },
 
-    conversion.Unit{ .name = "decade", .plural = "+s", .symbol = "___", .ratio = 315576000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "century", .plural = "+s", .symbol = "___", .ratio = 3155760000.0, .category = conversion.Category.time },
-    conversion.Unit{ .name = "millennium", .plural = "millennia", .symbol = "___", .ratio = 31557600000.0, .category = conversion.Category.time },
+    .{ .name = "decade", .scale = 315576000.0 },
+    .{ .name = "century", .scale = 3155760000.0 },
+    .{ .name = "millennium", .plural = "millennia", .scale = 31557600000.0 },
 
-    conversion.Unit{ .name = "plancktime", .plural = "+s", .symbol = "𝑡ₚ", .ratio = 5.39e-44, .category = conversion.Category.time },
-    conversion.Unit{ .name = "fortnight", .plural = "+s", .symbol = "___", .ratio = 1.21e+6, .category = conversion.Category.time },
-    conversion.Unit{ .name = "score", .plural = "+s", .symbol = "___", .ratio = 631152000.0, .category = conversion.Category.time },
-};
-
-pub const reference_unit = Units[0];
-
-pub fn load(graph: *conversion.ConversionGraph) !void {
-    for (0.., Units) |i, unit| {
-        try graph.addConversion(Units[i], reference_unit, unit.ratio);
-    }
-}
+    .{ .name = "plancktime", .symbol = "𝑡ₚ", .scale = 5.39e-44 },
+    .{ .name = "fortnight", .scale = 1.21e+6 },
+    .{ .name = "score", .scale = 631152000.0 },
+});

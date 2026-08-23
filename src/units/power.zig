@@ -1,38 +1,29 @@
-const std = @import("std");
-const conversion = @import("../conversion.zig");
+const Unit = @import("../Unit.zig");
 
-pub const Units = [_]conversion.Unit{
-    conversion.Unit{ .name = "watt", .plural = "+s", .symbol = "W", .ratio = 1.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "quectowatt", .plural = "+s", .symbol = "qW", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "rontowatt", .plural = "+s", .symbol = "rW", .ratio = 0.000000000000000000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "yoctowatt", .plural = "+s", .symbol = "yW", .ratio = 0.000000000000000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "zeptowatt", .plural = "+s", .symbol = "zW", .ratio = 0.000000000000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "attowatt", .plural = "+s", .symbol = "aW", .ratio = 0.000000000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "femtowatt", .plural = "+s", .symbol = "fW", .ratio = 0.000000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "picowatt", .plural = "+s", .symbol = "pW", .ratio = 0.000000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "nanowatt", .plural = "+s", .symbol = "nW", .ratio = 0.000000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "microwatt", .plural = "+s", .symbol = "μW", .ratio = 0.000001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "milliwatt", .plural = "+s", .symbol = "mW", .ratio = 0.001, .category = conversion.Category.power },
-    conversion.Unit{ .name = "centiwatt", .plural = "+s", .symbol = "cW", .ratio = 0.01, .category = conversion.Category.power },
-    conversion.Unit{ .name = "deciwatt", .plural = "+s", .symbol = "dW", .ratio = 0.1, .category = conversion.Category.power },
-    conversion.Unit{ .name = "decawatt", .plural = "+s", .symbol = "daW", .ratio = 10.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "hectowatt", .plural = "+s", .symbol = "hW", .ratio = 100.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "kilowatt", .plural = "+s", .symbol = "kW", .ratio = 1000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "megawatt", .plural = "+s", .symbol = "MW", .ratio = 1000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "gigawatt", .plural = "+s", .symbol = "GW", .ratio = 1000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "terawatt", .plural = "+s", .symbol = "TW", .ratio = 1000000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "petawatt", .plural = "+s", .symbol = "PW", .ratio = 1000000000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "exawatt", .plural = "+s", .symbol = "EW", .ratio = 1000000000000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "zettawatt", .plural = "+s", .symbol = "ZW", .ratio = 1000000000000000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "yottawatt", .plural = "+s", .symbol = "YW", .ratio = 1000000000000000000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "ronnawatt", .plural = "+s", .symbol = "RW", .ratio = 1000000000000000000000000000.0, .category = conversion.Category.power },
-    conversion.Unit{ .name = "quettawatt", .plural = "+s", .symbol = "QW", .ratio = 1000000000000000000000000000000.0, .category = conversion.Category.power },
-};
-
-pub const reference_unit = Units[0];
-
-pub fn load(graph: *conversion.ConversionGraph) !void {
-    for (0.., Units) |i, unit| {
-        try graph.addConversion(Units[i], reference_unit, unit.ratio);
-    }
-}
+pub const units = Unit.table(.power, &.{
+    .{ .name = "watt", .symbol = "W" },
+    .{ .name = "quectowatt", .symbol = "qW", .scale = 1e-30 },
+    .{ .name = "rontowatt", .symbol = "rW", .scale = 1e-27 },
+    .{ .name = "yoctowatt", .symbol = "yW", .scale = 1e-24 },
+    .{ .name = "zeptowatt", .symbol = "zW", .scale = 1e-21 },
+    .{ .name = "attowatt", .symbol = "aW", .scale = 1e-18 },
+    .{ .name = "femtowatt", .symbol = "fW", .scale = 1e-15 },
+    .{ .name = "picowatt", .symbol = "pW", .scale = 1e-12 },
+    .{ .name = "nanowatt", .symbol = "nW", .scale = 1e-9 },
+    .{ .name = "microwatt", .symbol = "µW", .scale = 1e-6 },
+    .{ .name = "milliwatt", .symbol = "mW", .scale = 0.001 },
+    .{ .name = "centiwatt", .symbol = "cW", .scale = 0.01 },
+    .{ .name = "deciwatt", .symbol = "dW", .scale = 0.1 },
+    .{ .name = "decawatt", .symbol = "daW", .scale = 10.0 },
+    .{ .name = "hectowatt", .symbol = "hW", .scale = 100.0 },
+    .{ .name = "kilowatt", .symbol = "kW", .scale = 1000.0 },
+    .{ .name = "megawatt", .symbol = "MW", .scale = 1e6 },
+    .{ .name = "gigawatt", .symbol = "GW", .scale = 1e9 },
+    .{ .name = "terawatt", .symbol = "TW", .scale = 1e12 },
+    .{ .name = "petawatt", .symbol = "PW", .scale = 1e15 },
+    .{ .name = "exawatt", .symbol = "EW", .scale = 1e18 },
+    .{ .name = "zettawatt", .symbol = "ZW", .scale = 1e21 },
+    .{ .name = "yottawatt", .symbol = "YW", .scale = 1e24 },
+    .{ .name = "ronnawatt", .symbol = "RW", .scale = 1e27 },
+    .{ .name = "quettawatt", .symbol = "QW", .scale = 1e30 },
+});

@@ -2,6 +2,7 @@
 .zig-cache/
 zig-cache/
 zig-out/
+zig-pkg/
 
 # Optional: editor/project files
 *.swp
@@ -14,6 +15,7 @@ zig-out/
 # Dependency packages (if using package manager that clones to folder)
 .zigmod/
 
-# Added by goreleaser init:
+# Release artifacts
+build/
 dist/
-.intentionally-empty-file.o
+staging/

@@ -1,61 +1,52 @@
-const std = @import("std");
-const conversion = @import("../conversion.zig");
+const Unit = @import("../Unit.zig");
 
-pub const Units = [_]conversion.Unit{
-    conversion.Unit{ .name = "pascal", .plural = "+s", .symbol = "Pa", .ratio = 1.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "quectopascal", .plural = "+s", .symbol = "qPa", .ratio = 0.000000000000000000000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "rontopascal", .plural = "+s", .symbol = "rPa", .ratio = 0.000000000000000000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "yoctopascal", .plural = "+s", .symbol = "yPa", .ratio = 0.000000000000000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "zeptopascal", .plural = "+s", .symbol = "zPa", .ratio = 0.000000000000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "attopascal", .plural = "+s", .symbol = "aPa", .ratio = 0.000000000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "femtopascal", .plural = "+s", .symbol = "fPa", .ratio = 0.000000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "picopascal", .plural = "+s", .symbol = "pPa", .ratio = 0.000000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "nanopascal", .plural = "+s", .symbol = "nPa", .ratio = 0.000000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "micropascal", .plural = "+s", .symbol = "μPa", .ratio = 0.000001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "millipascal", .plural = "+s", .symbol = "mPa", .ratio = 0.001, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "centipascal", .plural = "+s", .symbol = "cPa", .ratio = 0.01, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "decipascal", .plural = "+s", .symbol = "dPa", .ratio = 0.1, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "decapascal", .plural = "+s", .symbol = "daPa", .ratio = 10.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "hectopascal", .plural = "+s", .symbol = "hPa", .ratio = 100.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "kilopascal", .plural = "+s", .symbol = "kPa", .ratio = 1000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "megapascal", .plural = "+s", .symbol = "MPa", .ratio = 1000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "gigapascal", .plural = "+s", .symbol = "GPa", .ratio = 1000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "terapascal", .plural = "+s", .symbol = "TPa", .ratio = 1000000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "petapascal", .plural = "+s", .symbol = "PPa", .ratio = 1000000000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "exapascal", .plural = "+s", .symbol = "EPa", .ratio = 1000000000000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "zettapascal", .plural = "+s", .symbol = "ZPa", .ratio = 1000000000000000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "yottapascal", .plural = "+s", .symbol = "YPa", .ratio = 1000000000000000000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "ronnapascal", .plural = "+s", .symbol = "RPa", .ratio = 1000000000000000000000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "quettapascal", .plural = "+s", .symbol = "QPa", .ratio = 1000000000000000000000000000000.0, .category = conversion.Category.pressure },
+pub const units = Unit.table(.pressure, &.{
+    .{ .name = "pascal", .symbol = "Pa" },
+    .{ .name = "quectopascal", .symbol = "qPa", .scale = 1e-30 },
+    .{ .name = "rontopascal", .symbol = "rPa", .scale = 1e-27 },
+    .{ .name = "yoctopascal", .symbol = "yPa", .scale = 1e-24 },
+    .{ .name = "zeptopascal", .symbol = "zPa", .scale = 1e-21 },
+    .{ .name = "attopascal", .symbol = "aPa", .scale = 1e-18 },
+    .{ .name = "femtopascal", .symbol = "fPa", .scale = 1e-15 },
+    .{ .name = "picopascal", .symbol = "pPa", .scale = 1e-12 },
+    .{ .name = "nanopascal", .symbol = "nPa", .scale = 1e-9 },
+    .{ .name = "micropascal", .symbol = "µPa", .scale = 1e-6 },
+    .{ .name = "millipascal", .symbol = "mPa", .scale = 0.001 },
+    .{ .name = "centipascal", .symbol = "cPa", .scale = 0.01 },
+    .{ .name = "decipascal", .symbol = "dPa", .scale = 0.1 },
+    .{ .name = "decapascal", .symbol = "daPa", .scale = 10.0 },
+    .{ .name = "hectopascal", .symbol = "hPa", .scale = 100.0 },
+    .{ .name = "kilopascal", .symbol = "kPa", .scale = 1000.0 },
+    .{ .name = "megapascal", .symbol = "MPa", .scale = 1e6 },
+    .{ .name = "gigapascal", .symbol = "GPa", .scale = 1e9 },
+    .{ .name = "terapascal", .symbol = "TPa", .scale = 1e12 },
+    .{ .name = "petapascal", .symbol = "PPa", .scale = 1e15 },
+    .{ .name = "exapascal", .symbol = "EPa", .scale = 1e18 },
+    .{ .name = "zettapascal", .symbol = "ZPa", .scale = 1e21 },
+    .{ .name = "yottapascal", .symbol = "YPa", .scale = 1e24 },
+    .{ .name = "ronnapascal", .symbol = "RPa", .scale = 1e27 },
+    .{ .name = "quettapascal", .symbol = "QPa", .scale = 1e30 },
 
-    conversion.Unit{ .name = "millibar", .plural = "+s", .symbol = "mbar", .ratio = 100.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "centibar", .plural = "+s", .symbol = "cbar", .ratio = 1000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "decibar", .plural = "+s", .symbol = "dbar", .ratio = 10000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "bar", .plural = "+s", .symbol = "bar", .ratio = 100000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "kilobar", .plural = "+s", .symbol = "kbar", .ratio = 100000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "megabar", .plural = "+s", .symbol = "Mbar", .ratio = 10000000000.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "gigabar", .plural = "+s", .symbol = "Gbar", .ratio = 10000000000000.0, .category = conversion.Category.pressure },
+    .{ .name = "millibar", .symbol = "mbar", .scale = 100.0 },
+    .{ .name = "centibar", .symbol = "cbar", .scale = 1000.0 },
+    .{ .name = "decibar", .symbol = "dbar", .scale = 10000.0 },
+    .{ .name = "bar", .symbol = "bar", .scale = 1e5 },
+    .{ .name = "kilobar", .symbol = "kbar", .scale = 1e8 },
+    .{ .name = "megabar", .symbol = "Mbar", .scale = 1e11 },
+    .{ .name = "gigabar", .symbol = "Gbar", .scale = 1e14 },
 
-    conversion.Unit{ .name = "technicalatmosphere", .plural = "+s", .symbol = "at", .ratio = 98066.5, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "standardatmosphere", .plural = "+s", .symbol = "atm", .ratio = 101325.2738, .category = conversion.Category.pressure },
+    .{ .name = "technicalatmosphere", .symbol = "at", .scale = 98066.5 },
+    .{ .name = "standardatmosphere", .symbol = "atm", .scale = 101325.0 },
 
-    conversion.Unit{ .name = "barye", .plural = "+s", .symbol = "Ba", .ratio = 0.1, .category = conversion.Category.pressure },
+    .{ .name = "barye", .symbol = "Ba", .scale = 0.1 },
 
-    conversion.Unit{ .name = "inchofwatercolumn", .plural = "+s", .symbol = "inH20", .ratio = 248.84, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "meterofwatercolumn", .plural = "+s", .symbol = "mmH20", .ratio = 9806.65, .category = conversion.Category.pressure },
+    .{ .name = "inchofwatercolumn", .symbol = "inH2O", .scale = 248.84 },
+    .{ .name = "meterofwatercolumn", .symbol = "mH2O", .scale = 9806.65 },
 
-    conversion.Unit{ .name = "inchofmercury", .plural = "+s", .symbol = "inHg", .ratio = 3386.38815789, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "meterofmercury", .plural = "+s", .symbol = "mmHg", .ratio = 133.322368421, .category = conversion.Category.pressure },
+    .{ .name = "inchofmercury", .symbol = "inHg", .scale = 3386.38815789 },
+    .{ .name = "millimeterofmercury", .symbol = "mmHg", .scale = 133.322368421 },
 
-    conversion.Unit{ .name = "newtonpersquaremeter", .plural = "+s", .symbol = "N/m²", .ratio = 1.0, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "poundforcepersquareinch", .plural = "+s", .symbol = "psi", .ratio = 6894.757, .category = conversion.Category.pressure },
-    conversion.Unit{ .name = "torr", .plural = "+s", .symbol = "Torr", .ratio = 133.322368421, .category = conversion.Category.pressure },
-};
-
-pub const reference_unit = Units[0];
-
-pub fn load(graph: *conversion.ConversionGraph) !void {
-    for (0.., Units) |i, unit| {
-        try graph.addConversion(Units[i], reference_unit, unit.ratio);
-    }
-}
+    .{ .name = "newtonpersquaremeter", .symbol = "N/m²" },
+    .{ .name = "poundforcepersquareinch", .symbol = "psi", .scale = 6894.757 },
+    .{ .name = "torr", .symbol = "Torr", .scale = 133.322368421 },
+});
