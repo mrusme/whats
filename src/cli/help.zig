@@ -3,7 +3,7 @@ const whats = @import("whats");
 
 const Writer = std.Io.Writer;
 
-const rule = "-" ** 80;
+const rule: [80]u8 = @splat('-');
 
 pub fn usage(writer: *Writer, registry: *const whats.Registry) Writer.Error!void {
     try writer.writeAll(
@@ -17,7 +17,7 @@ pub fn usage(writer: *Writer, registry: *const whats.Registry) Writer.Error!void
         \\  Symbol  Name
         \\
     );
-    try writer.print("{s}\n", .{rule});
+    try writer.print("{s}\n", .{&rule});
 
     try writeUnits(writer, registry);
 
@@ -27,7 +27,7 @@ pub fn usage(writer: *Writer, registry: *const whats.Registry) Writer.Error!void
         \\
     );
     try writer.print("  {s: <8}{s}\n", .{ "%", "percent" });
-    try writer.print("{s}\n", .{rule});
+    try writer.print("{s}\n", .{&rule});
 
     try writer.writeAll(
         \\Note:
@@ -128,10 +128,10 @@ test "help output carries no stray NUL bytes" {
 
     const text = writer.buffered();
     try std.testing.expect(text.len > 0);
-    try std.testing.expectEqual(@as(?usize, null), std.mem.indexOfScalar(u8, text, 0));
-    try std.testing.expect(std.mem.indexOf(u8, text, "\nMONEY:\n  EUR     EUR\n") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "\nLENGTH:\n") != null);
-    try std.testing.expect(std.mem.indexOf(u8, text, "___") == null);
+    try std.testing.expectEqual(@as(?usize, null), std.mem.findScalar(u8, text, 0));
+    try std.testing.expect(std.mem.find(u8, text, "\nMONEY:\n  EUR     EUR\n") != null);
+    try std.testing.expect(std.mem.find(u8, text, "\nLENGTH:\n") != null);
+    try std.testing.expect(std.mem.find(u8, text, "___") == null);
 
     var lines = std.mem.splitScalar(u8, text, '\n');
     while (lines.next()) |line| {

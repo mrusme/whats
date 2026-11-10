@@ -59,15 +59,15 @@ pub fn init(gpa: Allocator, options: Options) Allocator.Error!Registry {
         .by_symbol = .empty,
         .by_name = .empty,
         .by_plural = .empty,
-        .references = .{},
+        .references = .empty,
         .transforms = .empty,
         .tree = bfstree.BFSTree.init(gpa),
     };
     errdefer registry.deinit();
 
     if (options.load_builtin) {
-        inline for (@typeInfo(Unit.Category).@"enum".fields) |field| {
-            try registry.addCategory(&@field(builtin, field.name).units);
+        inline for (@typeInfo(Unit.Category).@"enum".field_names) |name| {
+            try registry.addCategory(&@field(builtin, name).units);
         }
     }
 
@@ -225,7 +225,7 @@ pub fn convert(registry: *Registry, value: f64, from: Unit.Index, to: Unit.Index
 }
 
 fn normalizeMicro(term: []const u8, buffer: []u8) []const u8 {
-    if (std.mem.indexOf(u8, term, greek_mu) == null) return term;
+    if (std.mem.find(u8, term, greek_mu) == null) return term;
 
     var len: usize = 0;
     var i: usize = 0;

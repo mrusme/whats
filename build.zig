@@ -54,7 +54,7 @@ pub fn build(b: *std.Build) void {
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| run_cmd.addArgs(args);
+    run_cmd.addPassthruArgs();
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
@@ -76,13 +76,13 @@ pub fn build(b: *std.Build) void {
         const library = b.createModule(.{
             .root_source_file = b.path("src/root.zig"),
             .target = resolved,
-            .optimize = .ReleaseSafe,
+            .optimize = .safe,
         });
-        addDependencies(b, library, resolved, .ReleaseSafe);
+        addDependencies(b, library, resolved, .safe);
 
         const release_exe = b.addExecutable(.{
             .name = "whats",
-            .root_module = cliModule(b, library, build_options, resolved, .ReleaseSafe),
+            .root_module = cliModule(b, library, build_options, resolved, .safe),
         });
 
         const install = b.addInstallArtifact(release_exe, .{
@@ -98,7 +98,7 @@ fn addDependencies(
     b: *std.Build,
     module: *std.Build.Module,
     target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
+    optimize: std.lang.Optimize,
 ) void {
     module.addImport("bfstree", b.dependency("bfstree_zig", .{
         .target = target,
@@ -115,7 +115,7 @@ fn cliModule(
     whats: *std.Build.Module,
     build_options: *std.Build.Step.Options,
     target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
+    optimize: std.lang.Optimize,
 ) *std.Build.Module {
     const module = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),

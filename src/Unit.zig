@@ -15,11 +15,11 @@ pub const Index = enum(u32) {
     _,
 
     pub fn int(index: Index) u32 {
-        return @intFromEnum(index);
+        return @backingInt(index);
     }
 
     pub fn from(value: usize) Index {
-        return @enumFromInt(value);
+        return @fromBackingInt(@intCast(value));
     }
 };
 

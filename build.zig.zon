@@ -1,12 +1,12 @@
 .{
     .name = .whats,
-    .version = "0.0.0",
+    .version = "0.3.0",
     .fingerprint = 0xb808294da71f855a, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.1",
     .dependencies = .{
         .xml = .{
-            .url = "git+https://github.com/ianprime0509/zig-xml/?ref=HEAD#d73304c3d56d6331a0caca4d339607e7c740aab5",
-            .hash = "xml-0.2.0-ZTbP35V4AgA_pFiWGWiBILJK7ifCCvj7mbiGfyMcEi2K",
+            .url = "git+https://github.com/ianprime0509/zig-xml?ref=0.2.2#4beab29d68ab308af4bd12a4fc4187c24fdad0d6",
+            .hash = "xml-0.2.2-ZTbP35N4AgAN3HBgWmBp_LAQ0MIPKW17GAGMwx4DHGYK",
         },
         .bfstree_zig = .{
             .url = "git+https://tty.fail/mrus/bfstree.zig?ref=v0.1.0#fdb2cd0cf2fb6e097ff7e1f3c07373483001eeaa",
