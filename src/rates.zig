@@ -13,6 +13,8 @@ pub const base_currency = "EUR";
 
 pub const max_document_bytes = 1024 * 1024;
 
+const attempt_suffix = ".attempt";
+
 pub const Entry = struct {
     code: []const u8,
     rate: f64,
@@ -92,15 +94,33 @@ pub const Options = struct {
 pub fn load(gpa: Allocator, io: Io, cache_path: []const u8, options: Options) LoadError!Table {
     const cwd: Io.Dir = .cwd();
 
-    if (!options.offline and isStale(io, cwd, cache_path, options.max_age)) {
-        fetch(gpa, io, cwd, cache_path) catch {};
-    }
+    if (!options.offline) attempt(gpa, io, cwd, cache_path, options.max_age);
 
     const document = cwd.readFileAlloc(io, cache_path, gpa, .limited(max_document_bytes)) catch
         return error.Unavailable;
     defer gpa.free(document);
 
     return parse(gpa, document);
+}
+
+fn attempt(gpa: Allocator, io: Io, dir: Io.Dir, cache_path: []const u8, max_age: Io.Duration) void {
+    var buffer: [Io.Dir.max_path_bytes]u8 = undefined;
+    const marker = std.mem.print(&buffer, "{s}" ++ attempt_suffix, .{cache_path}) catch return;
+    if (!due(io, dir, cache_path, marker, max_age)) return;
+
+    mark(io, dir, marker) catch return;
+    fetch(gpa, io, dir, cache_path) catch {};
+}
+
+fn due(io: Io, dir: Io.Dir, cache_path: []const u8, marker: []const u8, max_age: Io.Duration) bool {
+    return isStale(io, dir, cache_path, max_age) and isStale(io, dir, marker, max_age);
+}
+
+fn mark(io: Io, dir: Io.Dir, path: []const u8) !void {
+    var atomic = try dir.createFileAtomic(io, path, .{ .make_path = true, .replace = true });
+    defer atomic.deinit(io);
+
+    try atomic.replace(io);
 }
 
 pub const FetchError = error{
@@ -232,6 +252,30 @@ test parse {
 
 test "malformed documents are rejected" {
     try testing.expectError(error.MalformedDocument, parse(testing.allocator, "<Cube currency="));
+}
+
+test "rates are fetched only when neither the file nor the last attempt is younger than a day" {
+    var tmp = testing.tmpDir(.{});
+    defer tmp.cleanup();
+
+    const io = testing.io;
+    const day: Io.Duration = .fromSeconds(24 * 60 * 60);
+    const old: Io.Dir.SetTimestampsOptions = .{ .modify_timestamp = .{ .new = .{ .nanoseconds = 0 } } };
+
+    try testing.expect(due(io, tmp.dir, "rates.xml", "rates.xml.attempt", day));
+
+    try mark(io, tmp.dir, "rates.xml.attempt");
+    try testing.expect(!due(io, tmp.dir, "rates.xml", "rates.xml.attempt", day));
+
+    try tmp.dir.setTimestamps(io, "rates.xml.attempt", old);
+    try testing.expect(due(io, tmp.dir, "rates.xml", "rates.xml.attempt", day));
+
+    try mark(io, tmp.dir, "rates.xml.attempt");
+    try testing.expect(!due(io, tmp.dir, "rates.xml", "rates.xml.attempt", day));
+
+    try tmp.dir.setTimestamps(io, "rates.xml.attempt", old);
+    try tmp.dir.writeFile(io, .{ .sub_path = "rates.xml", .data = sample });
+    try testing.expect(!due(io, tmp.dir, "rates.xml", "rates.xml.attempt", day));
 }
 
 test addTo {

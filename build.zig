@@ -68,7 +68,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&b.addRunArtifact(lib_tests).step);
     test_step.dependOn(&b.addRunArtifact(cli_tests).step);
 
-    const release_step = b.step("release", "Build ReleaseSafe binaries for every release target");
+    const release_step = b.step("release", "Build binaries in safe mode for every release target");
     for (release_targets) |query| {
         const triple = query.zigTriple(b.allocator) catch @panic("OOM");
         const resolved = b.resolveTargetQuery(query);
